@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.782.0",
+    "@aws-sdk/client-sqs": "^3.782.0",
+    "@socket.io/aws-sqs-adapter": "^0.1.1",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "http": "^0.0.1-security",
+    "socket.io": "^4.8.1"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "name": "chat-service",
+  "description": "",
+  "version": "1.0.0",
+  "main": "server.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

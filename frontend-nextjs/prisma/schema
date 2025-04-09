@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  image          String?
+  hashedPassword String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  roomParticipations RoomParticipant[]
+  readReceipts       MessageReadStatus[]
+
+  accounts Account[]
+  messages Message[]
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+}
+
+model Room {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  lastMessageAt DateTime @default(now())
+  name          String?
+  isGroup       Boolean  @default(false)
+
+  messages      Message[]
+  participants  RoomParticipant[]
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  body      String?
+  image     String?
+  createdAt DateTime @default(now())
+
+  readStatuses MessageReadStatus[]
+
+  roomId    String
+  room      Room   @relation(fields: [roomId], references: [id])
+
+  senderId  String
+  sender    User   @relation(fields: [senderId], references: [id])
+}
+
+// Junction table for User-Room many-to-many relationship
+model RoomParticipant {
+  userId  String
+  roomId  String
+  
+  user    User @relation(fields: [userId], references: [id])
+  room    Room @relation(fields: [roomId], references: [id])
+
+  @@id([userId, roomId])
+}
+
+// Junction table for User-Message "seen" relationship  
+model MessageReadStatus {
+  userId    String
+  messageId String
+  
+  user      User    @relation(fields: [userId], references: [id])
+  message   Message @relation(fields: [messageId], references: [id])
+
+  @@id([userId, messageId])
+}
