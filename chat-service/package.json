@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.788.0",
     "@aws-sdk/client-sns": "^3.782.0",
     "@aws-sdk/client-sqs": "^3.782.0",
+    "@aws-sdk/lib-dynamodb": "^3.788.0",
     "@socket.io/aws-sqs-adapter": "^0.1.1",
     "@socket.io/redis-adapter": "^8.3.0",
     "dotenv": "^16.4.7",
@@ -11,7 +13,8 @@
     "socket.io": "^4.8.1"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "setup-db": "node table.js"
   },
   "name": "chat-service",
   "description": "",

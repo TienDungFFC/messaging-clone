@@ -7,6 +7,8 @@ const { Server } = require('socket.io');
 const { createClient } = require('redis');
 const { createAdapter } = require('@socket.io/redis-adapter');
 
+// Import DB module
+const db = require('./dynamoConfig');
 
 const app = express();
 const server = http.createServer(app);
@@ -36,10 +38,6 @@ subClient.on('error', (err) => {
 
 pubClient.connect();
 subClient.connect();
-
-// io.adapter(
-//   createAdapter(snsClient, sqsClient)
-// );
 
 io.adapter(createAdapter(pubClient, subClient));
 
@@ -107,17 +105,26 @@ io.on('connection', (socket) => {
       data.createdAt = new Date().toISOString();
     }
     
-    // Broadcast message to all clients in this conversation
-    io.to(conversationId).emit('message:new', data);
-    
-    // Also emit with the old event name for backward compatibility
-    io.to(conversationId).emit('messages:new', data);
-    
-    console.log(`Message sent to conversation ${conversationId}`);
+    try {
+      // Lưu tin nhắn vào DynamoDB
+      const messageId = await db.saveMessage(data);
+      data.messageId = messageId;
+      
+      // Broadcast message to all clients in this conversation
+      io.to(conversationId).emit('message:new', data);
+      
+      // Also emit with the old event name for backward compatibility
+      io.to(conversationId).emit('messages:new', data);
+      
+      console.log(`Message sent to conversation ${conversationId}`);
+    } catch (error) {
+      console.error('Error saving message:', error);
+      socket.emit('error', { message: 'Không thể lưu tin nhắn' });
+    }
   });
 
   // Add this new socket event handler
-  socket.on('message:update', (data) => {
+  socket.on('message:update', async (data) => {
     console.log('Updating message:', data);
     const { conversationId, messageId } = data;
     
@@ -126,10 +133,36 @@ io.on('connection', (socket) => {
       return;
     }
     
-    // Broadcast the updated message to all clients in this conversation
-    io.to(conversationId).emit('message:update', data);
+    try {
+      // Cập nhật tin nhắn trong DynamoDB (bạn cần thêm hàm updateMessage vào module db)
+      // await db.updateMessage(data);
+      
+      // Broadcast the updated message to all clients in this conversation
+      io.to(conversationId).emit('message:update', data);
+      
+      console.log(`Message ${messageId} updated in conversation ${conversationId}`);
+    } catch (error) {
+      console.error('Error updating message:', error);
+      socket.emit('error', { message: 'Không thể cập nhật tin nhắn' });
+    }
+  });
+  
+  // Thêm sự kiện để lấy tin nhắn của cuộc trò chuyện
+  socket.on('messages:get', async (data) => {
+    const { conversationId, limit } = data;
     
-    console.log(`Message ${messageId} updated in conversation ${conversationId}`);
+    if (!conversationId) {
+      socket.emit('error', { message: 'ID cuộc trò chuyện không được cung cấp' });
+      return;
+    }
+    
+    try {
+      const messages = await db.getConversationMessages(conversationId, limit);
+      socket.emit('messages:list', { conversationId, messages });
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      socket.emit('error', { message: 'Không thể lấy tin nhắn' });
+    }
   });
 
   socket.on('typing', (data) => {
@@ -172,9 +205,116 @@ io.on('connection', (socket) => {
 
 (async () => {
   await io.of('/').adapter.init();
+  
+  // Thiết lập bảng DynamoDB nếu chưa có
+  try {
+    require('./setup-dynamodb');
+    console.log('Đã khởi tạo bảng DynamoDB');
+  } catch (error) {
+    console.error('Lỗi khi thiết lập DynamoDB:', error);
+  }
 
   const PORT = process.env.PORT || 3001;
   io.listen(PORT, () => {
     console.log(`WebSocket server listening on port ${PORT}`);
   });
 })();
+
+
+
+// API endpoints cho frontend
+app.use(express.json());
+
+// User endpoints
+app.get('/users/:userId', async (req, res) => {
+  try {
+    // Implement logic to get user from DynamoDB
+    const userId = req.params.userId;
+    // Thêm code để lấy user từ DynamoDB
+    const user = await db.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Người dùng không tồn tại' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy thông tin người dùng' });
+  }
+});
+
+app.post('/users', async (req, res) => {
+  try {
+    // Implement logic to create user in DynamoDB
+    const userData = req.body;
+    // Thêm code để tạo user trong DynamoDB
+    // const userId = await createUser(userData);
+    res.status(201).json({ message: 'Đã tạo người dùng', userData });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Lỗi khi tạo người dùng' });
+  }
+});
+
+// Conversation endpoints
+app.get('/conversations', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    if (!userId) {
+      return res.status(400).json({ error: 'userId là bắt buộc' });
+    }
+    const conversations = await db.getUserConversations(userId);
+    res.json(conversations);
+  } catch (error) {
+    console.error('Error fetching conversations:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy cuộc trò chuyện' });
+  }
+});
+
+app.get('/conversations/:conversationId', async (req, res) => {
+  try {
+    // Implement logic to get conversation from DynamoDB
+    const conversationId = req.params.conversationId;
+    // Thêm code để lấy cuộc trò chuyện từ DynamoDB
+    res.json({ conversationId, message: 'Chức năng đang được phát triển' });
+  } catch (error) {
+    console.error('Error fetching conversation:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy thông tin cuộc trò chuyện' });
+  }
+});
+
+app.post('/conversations', async (req, res) => {
+  try {
+    const conversationData = req.body;
+    const conversationId = await db.createConversation(conversationData);
+    res.status(201).json({ conversationId, ...conversationData });
+  } catch (error) {
+    console.error('Error creating conversation:', error);
+    res.status(500).json({ error: 'Lỗi khi tạo cuộc trò chuyện' });
+  }
+});
+
+// Message endpoints
+app.get('/messages', async (req, res) => {
+  try {
+    const conversationId = req.query.conversationId;
+    if (!conversationId) {
+      return res.status(400).json({ error: 'conversationId là bắt buộc' });
+    }
+    const messages = await db.getConversationMessages(conversationId);
+    res.json(messages);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy tin nhắn' });
+  }
+});
+
+app.post('/messages', async (req, res) => {
+  try {
+    const messageData = req.body;
+    const messageId = await db.saveMessage(messageData);
+    res.status(201).json({ messageId, ...messageData });
+  } catch (error) {
+    console.error('Error saving message:', error);
+    res.status(500).json({ error: 'Lỗi khi lưu tin nhắn' });
+  }
+});
