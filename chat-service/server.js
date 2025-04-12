@@ -2,15 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const { SNS } = require('@aws-sdk/client-sns');
-const { SQS } = require('@aws-sdk/client-sqs');
-const { createAdapter } = require('@socket.io/aws-sqs-adapter');
+// const { createAdapter } = require('@socket.io/aws-sqs-adapter');
+
+const { createClient } = require('redis');
+const { createAdapter } = require('@socket.io/redis-adapter');
+
 
 const app = express();
 const server = http.createServer(app);
-
-const snsClient = new SNS({ region: process.env.AWS_REGION || 'ap-southeast-1' });
-const sqsClient = new SQS({ region: process.env.AWS_REGION || 'ap-southeast-1' });
 
 // Add basic route for health check
 app.get('/', (req, res) => {
@@ -24,9 +23,25 @@ const io = new Server(server, {
   }
 });
 
-io.adapter(
-  createAdapter(snsClient, sqsClient)
-);
+const pubClient = createClient().duplicate();
+const subClient = createClient().duplicate();
+
+pubClient.on('error', (err) => {
+  console.error('Redis pubClient error:', err);
+});
+
+subClient.on('error', (err) => {
+  console.error('Redis subClient error:', err);
+});
+
+pubClient.connect();
+subClient.connect();
+
+// io.adapter(
+//   createAdapter(snsClient, sqsClient)
+// );
+
+io.adapter(createAdapter(pubClient, subClient));
 
 // Track users and their conversations
 const userConversations = new Map();
