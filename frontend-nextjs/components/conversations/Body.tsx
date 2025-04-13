@@ -7,7 +7,8 @@ import axios from "axios";
 import { find } from "lodash";
 import { useEffect, useRef, useState } from "react";
 import MessageBox from "./MessageBox";
-import { useSession } from "next-auth/react"; 
+import { useSession } from "next-auth/react";
+import { useTypingUsers } from "@/hooks/useTypingUsers";
 
 type Props = {
   initialMessages: FullMessageType[];
@@ -19,79 +20,82 @@ function Body({ initialMessages }: Props) {
   console.log("message:", messages);
   const { conversationId } = useConversation();
   const { data: session } = useSession();
-  const currentUser = session?.user; 
+  const currentUser = session?.user;
+  const typingUsers = useTypingUsers(conversationId);
 
   useEffect(() => {
+    socket.emit("join:conversation", conversationId);
     axios.post(`/api/conversations/${conversationId}/seen`);
-  }, [conversationId]);
 
-  useEffect(() => {
-    socket.emit('join:conversation', conversationId);
-    
-    const messageHandler = (message: FullMessageType) => {
+    const handleNewMessage = (message: FullMessageType) => {
       console.log("message handler: ", message);
-      
+
       // Đảm bảo message có đầy đủ thông tin sender
-      if (!message.sender && currentUser && message.senderId === currentUser.id) {
-        message.sender = {
-          id: currentUser.id,
-          name: currentUser.name || "You",
-          email: currentUser.email,
-          image: currentUser.image || null
-        };
+
+      if (!find(messages, { id: message.id })) {
+        setMessages((prev) => [...prev, message]);
       }
-      
-      if (message.conversationId === conversationId) {
-        setMessages((current) => {
-          if (find(current, { id: message.id })) {
-            return current;
-          }
-          return [...current, message];
-        });
-        
-        setTimeout(() => {
-          bottomRef?.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
-      
-      if (bottomRef?.current && message.senderId !== currentUser?.id) {
-        axios.post(`/api/conversations/${conversationId}/seen`);
-      }
+      scrollToBottom();
     };
 
-    const updateMessageHandler = (newMessage: FullMessageType) => {
-      setMessages((current) => current.map((currentMessage) => {
-        if (currentMessage.id === newMessage.id) {
-          return newMessage;
-        }
-        return currentMessage;
-      }));
+    const handleUpdateMessage = (updated: FullMessageType) => {
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === updated.id ? updated : msg))
+      );
     };
 
-    socket.on("messages:new", messageHandler);
-    socket.on("message:update", updateMessageHandler);
+    socket.on("messages:new", handleNewMessage);
+    socket.on("message:update", handleUpdateMessage);
 
     return () => {
-      socket.emit('leave:conversation', conversationId);
-      socket.off("messages:new", messageHandler);
-      socket.off("message:update", updateMessageHandler);
+      socket.emit("leave:conversation", conversationId);
+      socket.off("messages:new", handleNewMessage);
+      socket.off("message:update", handleUpdateMessage);
     };
   }, [conversationId, currentUser]);
 
   useEffect(() => {
-    bottomRef?.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom();
   }, [messages]);
+
+  const scrollToBottom = () => {
+    bottomRef?.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <div className="flex-1 overflow-y-auto dark:bg-black">
       {messages.map((message, index) => (
         <MessageBox
           isLast={index === messages.length - 1}
-          key={message.id + index}
+          key={message.id ?? `fallback-${index}`}
           data={message}
         />
       ))}
-      <div className="pt-24" ref={bottomRef} />
+
+      {typingUsers
+        .filter((u) => u.id !== currentUser?.id)
+        .map((u) => {
+          const fakeMessage: FullMessageType = {
+            id: `typing-${u.id}`,
+            body: "Đang nhập...",
+            createdAt: new Date(),
+            image: null,
+            senderId: u.id,
+            sender: u as any,
+            seen: [],
+            conversationId,
+          };
+          return (
+            <MessageBox
+              key={fakeMessage.id}
+              data={fakeMessage}
+              isTyping={true}
+              isLast={false}
+            />
+          );
+        })}
+
+      <div ref={bottomRef} className="pt-24" />
     </div>
   );
 }

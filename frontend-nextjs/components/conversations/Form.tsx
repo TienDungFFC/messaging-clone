@@ -6,67 +6,82 @@ import { HiPaperAirplane, HiPhoto } from "react-icons/hi2";
 import axios from "axios";
 import { CldUploadButton } from "next-cloudinary";
 import useConversation from "@/hooks/useConversation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 
 function Form() {
   const { conversationId } = useConversation();
   const { socket, isConnected, sendMessage, joinConversation } = useSocket();
+  const { data: session } = useSession();
+  const currentUser = session?.user;
   const [isLoading, setIsLoading] = useState(false);
-  const session = useSession();
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FieldValues>({
+  const { register, handleSubmit, setValue, watch } = useForm<FieldValues>({
     defaultValues: {
       message: "",
     },
   });
 
-  // Join the conversation on component mount
+  const message = watch("message");
+
+  // Join room và connect user khi mount
   useEffect(() => {
-    if (conversationId && isConnected && socket) {
-      joinConversation(conversationId);
-      
-      if (session.data?.user) {
-        socket.emit('user:connect', {
-          userId: session.data.user.id,
-          email: session.data.user.email
-        });
-      }
-    }
-    
+    if (!socket || !conversationId || !currentUser || !isConnected) return;
+
+    joinConversation(conversationId);
+
+    socket.emit("user:connect", {
+      userId: currentUser.id,
+      email: currentUser.email,
+    });
+
     return () => {
-      // Clean up when component unmounts
-      if (socket && conversationId) {
-        socket.emit('leave', conversationId);
-      }
+      socket.emit("leave", conversationId);
     };
-  }, [conversationId, isConnected, socket, joinConversation, session.data]);
+  }, [socket, conversationId, currentUser, isConnected]);
+
+  const handleTyping = () => {
+    if (!socket || !currentUser) return;
+
+    socket.emit("typing", {
+      conversationId,
+      userId: currentUser.id,
+      name: currentUser.name,
+      email: currentUser.email,
+      image: currentUser.image ?? null,
+    });
+
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+
+    typingTimeout.current = setTimeout(() => {
+      console.log("EMIT stop:typing (timeout)");
+      socket.emit("stop:typing", {
+        conversationId,
+        userId: currentUser.id,
+      });
+    }, 3000);
+  };
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    if (!conversationId) return;
+
     try {
       setIsLoading(true);
-      
-      // Clear the input field immediately for better UX
       setValue("message", "", { shouldValidate: true });
-      
-      // Send via REST API
+
       const response = await axios.post("/api/messages", {
         ...data,
         conversationId,
       });
-      console.log("response:", response.data);
-      // If API call successful, also emit via socket
+
+      socket?.emit("stop:typing", {
+        conversationId,
+        userId: currentUser?.id,
+      });
+
       if (response.data && isConnected) {
-        sendMessage(
-          conversationId, 
-          data.message,
-          response.data.senderId
-        );
+        sendMessage(conversationId, data.message, response.data.senderId);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -76,33 +91,22 @@ function Form() {
   };
 
   const handleUpload = async (result: any) => {
+    if (!conversationId) return;
+
     try {
       setIsLoading(true);
-      
-      // Send image via REST API
-      const response = await axios.post("/api/messages", {
+      await axios.post("/api/messages", {
         image: result.info.secure_url,
         conversationId,
       });
-      
-      // If API call successful, also emit via socket
-      if (response.data && socket) {
-        socket.emit("message:send", {
-          conversationId,
-          image: result.info.secure_url,
-          senderId: response.data.senderId,
-          createdAt: new Date().toISOString()
-        });
-      }
     } catch (error) {
       console.error("Error uploading image:", error);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
-    <div className="py-4 px-4 bg-white dark:bg-black border-t dark:border-t-gray-600 flex items-center gap-2 lg:gap-4 w-full">
+    <div className="py-4 px-4 bg-white dark:bg-black border-t dark:border-t-gray-600 flex items-center gap-2 lg:gap-4 w-full z-30">
       <CldUploadButton
         options={{ maxFiles: 1 }}
         onUpload={handleUpload}
@@ -110,47 +114,26 @@ function Form() {
       >
         <HiPhoto size={30} className="text-sky-500" />
       </CldUploadButton>
-      
-      <form 
-        onSubmit={handleSubmit(onSubmit)} 
-        className="flex items-center gap-2 lg:gap-4 w-full"
-      >
-        <div className="relative w-full">
-          <input
-            type="text"
-            {...register("message", { required: true })}
-            placeholder="Write a message"
-            className="
-              text-black
-              dark:text-white
-              font-light
-              py-2
-              px-4
-              bg-neutral-100 
-              dark:bg-neutral-800
-              w-full 
-              rounded-full
-              focus:outline-none
-            "
-            disabled={isLoading}
-          />
-        </div>
-        <button 
+
+      <form onSubmit={handleSubmit(onSubmit)} className="flex w-full gap-2">
+        <input
+          type="text"
+          {...register("message")}
+          value={message}
+          onChange={(e) => {
+            setValue("message", e.target.value);
+            handleTyping();
+          }}
+          placeholder="Write a message"
+          className="text-black dark:text-white font-light py-2 px-4 bg-neutral-100 dark:bg-neutral-800 w-full rounded-full focus:outline-none z-50"
+          disabled={isLoading}
+        />
+        <button
           type="submit"
-          className="
-            rounded-full 
-            p-2 
-            bg-sky-500 
-            cursor-pointer 
-            hover:bg-sky-600 
-            transition
-          "
+          className="rounded-full p-2 bg-sky-500 hover:bg-sky-600 transition"
           disabled={isLoading}
         >
-          <HiPaperAirplane
-            size={18}
-            className="text-white"
-          />
+          <HiPaperAirplane size={18} className="text-white" />
         </button>
       </form>
     </div>
