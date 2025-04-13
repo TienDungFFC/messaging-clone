@@ -89,7 +89,7 @@ function ConversationList({ initialItems, users }: Props) {
       >
         <div className="px-5">
           <div className="flex justify-between mb-4 pt-4">
-            <div className="text-2xl font-bold text-neutral-800 dark:text-neutral-200">
+            <div className="text-2xl font-bold text-neutral-800 dark:text-neutral-200 max-lg:hidden">
               Messages
             </div>
             <div

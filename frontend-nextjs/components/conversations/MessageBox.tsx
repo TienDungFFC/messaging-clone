@@ -13,14 +13,14 @@ import ImageModel from "../model/ImageModel";
 type Props = {
   data: FullMessageType;
   isLast?: boolean;
+  isTyping?: boolean;
 };
 
-function MessageBox({ data, isLast }: Props) {
-  console.log("data in message box:", data)
+function MessageBox({ data, isLast, isTyping }: Props) {
+  console.log("data in message box:", data);
   const session = useSession();
   const [imageModelOpen, setImageModelOpen] = useState(false);
-
-  const isOwn = session?.data?.user?.email === data?.sender?.email;
+  const isOwn = !isTyping && session?.data?.user?.email === data?.sender?.email;
   const seenList = (data.seen || [])
     .filter((user) => user.email !== data?.sender?.email)
     .map((user) => user.name)
@@ -31,7 +31,11 @@ function MessageBox({ data, isLast }: Props) {
   const body = clsx(`flex flex-col gap-2`, isOwn && "items-end");
   const message = clsx(
     "text-sm w-fit overflow-hidden",
-    isOwn ? "bg-sky-500 text-white" : "bg-gray-100 dark:bg-gray-900",
+    isTyping
+      ? "bg-transparent text-gray-400 italic"
+      : isOwn
+      ? "bg-sky-500 text-white"
+      : "bg-gray-100 dark:bg-gray-900",
     data.image ? "rounded-md p-0" : "rounded-2xl py-2 px-3"
   );
 
@@ -40,8 +44,8 @@ function MessageBox({ data, isLast }: Props) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{
-        duration: 0.3,  
-        delay: 0.1,    
+        duration: 0.3,
+        delay: 0.1,
         ease: [0, 0.71, 0.2, 1.01],
       }}
       className={container}
@@ -55,9 +59,11 @@ function MessageBox({ data, isLast }: Props) {
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {data.sender?.name || "Unknown User"}
           </div>
-          <div className="text-xs text-gray-400 dark:text-gray-300">
-            {format(new Date(data.createdAt), "p")}
-          </div>
+          {!isTyping && (
+            <div className="text-xs text-gray-400 dark:text-gray-300">
+              {format(new Date(data.createdAt), "p")}
+            </div>
+          )}
         </div>
         <div className={message}>
           <ImageModel
@@ -75,7 +81,9 @@ function MessageBox({ data, isLast }: Props) {
               className="object-cover cursor-pointer hover:scale-110 transition translate"
             />
           ) : (
-            <div className="max-w-[350px]">{data.body ? data.body : data.message}</div>
+            <div className="max-w-[350px]">
+              {isTyping ? "Đang nhập..." : data.body ? data.body : data.message}
+            </div>
           )}
         </div>
         {isLast && isOwn && seenList.length > 0 && (
