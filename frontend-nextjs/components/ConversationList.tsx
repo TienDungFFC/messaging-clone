@@ -1,6 +1,6 @@
 "use client";
 
-import useRoom from "@/hooks/useRoom"; 
+import useRoom from "@/hooks/useRoom";
 import { socket } from "@/libs/socket";
 import { FullRoomType } from "@/type"; // Updated type
 import { User } from "@prisma/client";
@@ -100,11 +100,7 @@ function ConversationList({ initialItems, users }: Props) {
             </div>
           </div>
           {items.map((item) => (
-            <RoomBox
-              key={item.id}
-              data={item}
-              selected={roomId === item.id}
-            />
+            <RoomBox key={item.id} data={item} selected={roomId === item.id} />
           ))}
         </div>
       </aside>
