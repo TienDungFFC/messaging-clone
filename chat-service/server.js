@@ -30,21 +30,23 @@ io.adapter(
 
 // Track users and their conversations
 const userConversations = new Map();
-
+const onlineUsers = new Set();
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
-  
+
   // Store user information when they connect
   socket.on('user:connect', (userData) => {
     const { userId, email } = userData;
     console.log(`User ${userId} (${email}) connected with socket ${socket.id}`);
-    
+
     // Associate this socket with the user
     socket.userId = userId;
     socket.userEmail = email;
     
+    onlineUsers.add(email);
     // Let other users know this user is online
     socket.broadcast.emit('user:online', { userId, email });
+    socket.emit('user:list', Array.from(onlineUsers));
   });
 
   socket.on('join:room', (roomId) => {
