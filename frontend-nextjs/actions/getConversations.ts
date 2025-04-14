@@ -4,9 +4,7 @@ import getCurrentUser from "./getCurrentUser";
 const getConversations = async () => {
   const currentUser = await getCurrentUser();
 
-  if (!currentUser?.id) {
-    return [];
-  }
+  if (!currentUser?.id) return [];
 
   try {
     const conversations = await prisma.conversation.findMany({
@@ -14,23 +12,37 @@ const getConversations = async () => {
         lastMessageAt: "desc",
       },
       where: {
-        userIds: {
-          has: currentUser.id,
+        users: {
+          some: {
+            userId: currentUser.id,
+          },
         },
       },
       include: {
-        users: true,
+        users: {
+          include: {
+            user: true,
+          },
+        },
         messages: {
           include: {
             sender: true,
-            seen: true,
+            seenBy: {
+              include: {
+                user: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "asc", // hoặc "desc" nếu bạn muốn tin nhắn mới nhất đầu
           },
         },
       },
     });
 
     return conversations;
-  } catch (error: any) {
+  } catch (error) {
+    console.error("getConversations error:", error);
     return [];
   }
 };

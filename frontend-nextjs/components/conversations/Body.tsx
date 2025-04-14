@@ -17,7 +17,6 @@ type Props = {
 function Body({ initialMessages }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState(initialMessages);
-  console.log("message:", messages);
   const { conversationId } = useConversation();
   const { data: session } = useSession();
   const currentUser = session?.user;

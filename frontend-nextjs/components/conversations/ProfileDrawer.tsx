@@ -23,14 +23,16 @@ type Props = {
 function ProfileDrawer({ isOpen, onClose, data }: Props) {
   const otherUser = useOtherUser(data);
   const { members } = useActiveList();
-  const isActive = otherUser?.email ? members.indexOf(otherUser.email) !== -1 : false;
+  const isActive = otherUser?.email
+    ? members.indexOf(otherUser.email) !== -1
+    : false;
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const joinDate = useMemo(() => {
     if (!otherUser?.createdAt) {
       return "Unknown";
     }
-    
+
     try {
       // If createdAt is already a Date object or valid ISO string
       return format(new Date(otherUser.createdAt), "PP");
@@ -105,7 +107,11 @@ function ProfileDrawer({ isOpen, onClose, data }: Props) {
                         <div className="flex flex-col items-center">
                           <div className="mb-2">
                             {data.isGroup ? (
-                              <AvatarGroup name={data.name || otherUser?.name || "Group Chat"} />
+                              <AvatarGroup
+                                name={
+                                  data.name || otherUser?.name || "Group Chat"
+                                }
+                              />
                             ) : (
                               <Avatar user={otherUser || {}} />
                             )}

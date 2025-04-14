@@ -6,6 +6,8 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
+    console.log("Current User in getConversations:", currentUser);
+
     const body = await request.json();
     const { userId, isGroup, members, name } = body;
 

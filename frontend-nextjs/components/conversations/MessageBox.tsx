@@ -17,7 +17,6 @@ type Props = {
 };
 
 function MessageBox({ data, isLast, isTyping }: Props) {
-  console.log("data in message box:", data);
   const session = useSession();
   const [imageModelOpen, setImageModelOpen] = useState(false);
   const isOwn = !isTyping && session?.data?.user?.email === data?.sender?.email;

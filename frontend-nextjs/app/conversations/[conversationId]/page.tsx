@@ -20,7 +20,7 @@ interface FullMessage extends Message {
 const ConversationId = async ({ params }: { params: IParams }) => {
   const conversations = await getConversationById(params.conversationId);
   const initialMessages = await getMessage(params.conversationId);
-  console.log("initialMessages", initialMessages);
+  // console.log("initialMessages", initialMessages);
   if (!conversations) {
     return (
       <div className="lg:pl-80 h-full">
