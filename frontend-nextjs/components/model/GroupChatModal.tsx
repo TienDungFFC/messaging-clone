@@ -45,7 +45,10 @@ function GroupChatModal({ users, onClose, isOpen }: Props) {
         ...data,
         isGroup: true,
       })
-      .then(() => {
+      .then((res) => {
+        if (res?.data?.id) {
+          router.push(`/conversations/${res.data.id}`);
+        }
         router.refresh();
         onClose();
       })

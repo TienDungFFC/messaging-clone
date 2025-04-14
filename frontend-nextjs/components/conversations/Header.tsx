@@ -19,8 +19,11 @@ type Props = {
 };
 
 function Header({ conversation }: Props) {
+  // console.log("conversation: ", conversation);
   const otherUser = useOtherUser(conversation);
+  // console.log("otherUser.email", otherUser?.email);
   const { members } = useActiveList();
+  // console.log("active members", members);
   const isActive = members.indexOf(otherUser?.email!) !== -1;
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -53,7 +56,7 @@ function Header({ conversation }: Props) {
             <Avatar user={otherUser} />
           )}
           <div className="flex flex-col">
-            <div>{conversation.name || (otherUser?.name || "Chat")}</div>
+            <div>{conversation.name || otherUser?.name || "Chat"}</div>
             <div className="text-sm font-light text-neutral-500 dark:text-neutral-300">
               {statusText}
             </div>

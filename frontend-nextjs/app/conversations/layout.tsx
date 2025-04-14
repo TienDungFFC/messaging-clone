@@ -11,7 +11,6 @@ export default async function ConversationsLayout({
 }) {
   const conversations = await getConversations();
   const users = await getUser();
-
   return (
     // @ts-expect-error Server Component
     <Sidebar>

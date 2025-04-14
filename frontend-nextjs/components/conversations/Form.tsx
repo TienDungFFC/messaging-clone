@@ -55,7 +55,6 @@ function Form() {
     if (typingTimeout.current) clearTimeout(typingTimeout.current);
 
     typingTimeout.current = setTimeout(() => {
-      console.log("EMIT stop:typing (timeout)");
       socket.emit("stop:typing", {
         conversationId,
         userId: currentUser.id,
