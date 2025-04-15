@@ -40,14 +40,14 @@ export const SocketProvider = ({
   useEffect(() => {
     if (!user) return; // Only connect if there's a user
     
-    console.log('Initializing socket connection with user:', user.userId);
+    console.log('Initializing socket connection with user:', user.id);
     
     // Initialize socket connection
     const socketInstance = io(CHAT_SERVICE_URL, {
       autoConnect: true,
       reconnection: true,
       auth: {
-        userId: user.userId
+        userId: user.id
       }
     });
 
@@ -58,7 +58,7 @@ export const SocketProvider = ({
       
       // Emit user:connect event with user data
       socketInstance.emit('user:connect', {
-        userId: user.userId,
+        userId: user.id,
         email: user.email,
         name: user.name
       });
@@ -95,15 +95,14 @@ export const SocketProvider = ({
   const sendMessage = useCallback((conversationId: string, message: string, senderId: string, messageType: string = 'text') => {
     if (!socket || !isConnected || !user) return;
     
-    // Tạo payload theo cấu trúc đúng
     const messageData = {
       conversationId,
-      message, // Sử dụng 'message' thay vì 'content'
+      message, 
       senderId,
       messageType,
       createdAt: new Date().toISOString(),
       sender: {
-        id: user.userId,  // Sử dụng 'id' cho senderId trong đối tượng sender
+        id: user.id,
         name: user.name,
         email: user.email,
         image: user.avatarUrl || null

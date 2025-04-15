@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 interface User {
-  userId?: string;
+  id?: string;
   name?: string;
   avatarUrl?: string;
 }
@@ -45,7 +45,7 @@ const AvatarGroup: React.FC<AvatarGroupProps> = ({
         
         {avatars.map((user, index) => (
           <div 
-            key={user.userId || index}
+            key={user.id || index}
             className={`absolute ${positions[index]} w-[60%] h-[60%] rounded-full overflow-hidden`}
           >
             {user.avatarUrl ? (

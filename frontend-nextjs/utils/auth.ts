@@ -10,7 +10,7 @@ export const USER_DATA_KEY = 'user-data';
 
 // Type definitions
 export interface User {
-  userId: string;
+  id: string;
   name: string;
   email: string;
   avatarUrl?: string;
@@ -78,7 +78,7 @@ export const getUserFromToken = (token: string): User | null => {
     const payload = JSON.parse(window.atob(base64));
     
     return {
-      userId: payload.id,
+      id: payload.id,
       email: payload.email,
       name: payload.name || '',
       // Other properties can be added if they're included in the JWT
