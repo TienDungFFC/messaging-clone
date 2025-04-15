@@ -1,56 +1,61 @@
 "use client";
 
-import useActiveList from "@/hooks/useActiveList";
-import useOtherUser from "@/hooks/useOtherUser";
-import { Dialog, Transition } from "@headlessui/react";
-import { Conversation, User } from "@prisma/client";
-import { format } from "date-fns";
 import { Fragment, useMemo, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 import { IoClose, IoTrash } from "react-icons/io5";
+import { format } from "date-fns";
 
 import Avatar from "../Avatar";
 import AvatarGroup from "../AvatarGroup";
 import ConfirmModal from "../model/ConfirmModal";
 
-type Props = {
+interface User {
+  userId: string;
+  name: string;
+  avatarUrl: string;
+}
+
+interface Conversation {
+  conversationId: string;
+  name: string;
+  participantIds: string[];
+  type: 'direct' | 'group';
+  lastMessagePreview: string;
+  createdAt: string;
+  updatedAt: string;
+  lastMessageAt: string;
+  otherUser?: User;
+}
+
+interface ProfileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  data: Conversation & {
-    users: User[];
-  };
-};
+  data: Conversation;
+}
 
-function ProfileDrawer({ isOpen, onClose, data }: Props) {
-  const otherUser = useOtherUser(data);
-  const { members } = useActiveList();
-  const isActive = otherUser?.email ? members.indexOf(otherUser.email) !== -1 : false;
+const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ 
+  isOpen, 
+  onClose, 
+  data 
+}) => {
+  const isGroup = data.type === 'group';
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const joinDate = useMemo(() => {
-    if (!otherUser?.createdAt) {
-      return "Unknown";
-    }
-    
-    try {
-      // If createdAt is already a Date object or valid ISO string
-      return format(new Date(otherUser.createdAt), "PP");
-    } catch (error) {
-      console.error("Invalid date format:", otherUser?.createdAt);
-      return "Unknown";
-    }
-  }, [otherUser?.createdAt]);
-
   const title = useMemo(() => {
-    return data.name || otherUser?.name || "Chat";
-  }, [data.name, otherUser?.name]);
+    return data.name || data.otherUser?.name || "Unknown";
+  }, [data.name, data.otherUser?.name]);
 
   const statusText = useMemo(() => {
-    if (data.isGroup) {
-      return `${data.users.length} Members`;
+    if (isGroup) {
+      return `${data.participantIds.length} members`;
     }
 
-    return isActive ? "Active" : "Offline";
-  }, [data, isActive]);
+    return 'Offline';
+  }, [data.participantIds.length, isGroup]);
+
+  const joinedDate = useMemo(() => {
+    return format(new Date(data.createdAt), 'PP');
+  }, [data.createdAt]);
 
   return (
     <>
@@ -71,8 +76,16 @@ function ProfileDrawer({ isOpen, onClose, data }: Props) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black bg-opacity-40" />
+            <div 
+              className="
+                fixed 
+                inset-0 
+                bg-black 
+                bg-opacity-40
+              " 
+            />
           </Transition.Child>
+
           <div className="fixed inset-0 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
               <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
@@ -104,13 +117,13 @@ function ProfileDrawer({ isOpen, onClose, data }: Props) {
                       <div className="relative mt-6 flex-1 px-4 sm:px-6">
                         <div className="flex flex-col items-center">
                           <div className="mb-2">
-                            {data.isGroup ? (
-                              <AvatarGroup name={data.name || otherUser?.name || "Group Chat"} />
+                            {isGroup ? (
+                              <AvatarGroup users={[]} name={data.name} size="large" />
                             ) : (
-                              <Avatar user={otherUser || {}} />
+                              <Avatar user={data.otherUser || { name: title }} size="large" />
                             )}
                           </div>
-                          <div>{title}</div>
+                          <div className="text-xl font-bold">{title}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-300">
                             {statusText}
                           </div>
@@ -119,8 +132,8 @@ function ProfileDrawer({ isOpen, onClose, data }: Props) {
                               onClick={() => setConfirmOpen(true)}
                               className="flex flex-col gap-3 items-center cursor-pointer hover:opacity-75"
                             >
-                              <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-900 rounded-full flex items-center justify-center">
-                                <IoTrash size={20} />
+                              <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
+                                <IoTrash size={20} className="text-white" />
                               </div>
                               <div className="text-sm font-light text-neutral-600 dark:text-neutral-300">
                                 Delete
@@ -129,43 +142,26 @@ function ProfileDrawer({ isOpen, onClose, data }: Props) {
                           </div>
                           <div className="w-full pb-5 pt-5 sm:px-0 sm:pt-0">
                             <dl className="space-y-8 px-4 sm:space-y-6 sm:px-6">
-                              {data.isGroup && (
+                              {isGroup && (
                                 <div>
                                   <dt className="text-sm font-medium text-gray-500 dark:text-gray-300 sm:w-40 sm:flex-shrink-0">
-                                    Emails
+                                    Members
                                   </dt>
                                   <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:col-span-2">
-                                    {data.users
-                                      .map((user) => user.name)
-                                      .join(", ")}
+                                    {data.participantIds.length}
                                   </dd>
                                 </div>
                               )}
-                              {!data.isGroup && (
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-300 sm:w-40 sm:flex-shrink-0">
-                                    Email
-                                  </dt>
-                                  <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:col-span-2">
-                                    {otherUser?.email || "No email available"}
-                                  </dd>
-                                </div>
-                              )}
-                              {!data.isGroup && otherUser && (
-                                <>
-                                  <hr />
-                                  <div>
-                                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-300 sm:w-40 sm:flex-shrink-0">
-                                      Joined
-                                    </dt>
-                                    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:col-span-2">
-                                      <time dateTime={joinDate}>
-                                        {joinDate}
-                                      </time>
-                                    </dd>
-                                  </div>
-                                </>
-                              )}
+                              <div>
+                                <dt className="text-sm font-medium text-gray-500 dark:text-gray-300 sm:w-40 sm:flex-shrink-0">
+                                  Created
+                                </dt>
+                                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:col-span-2">
+                                  <time dateTime={data.createdAt}>
+                                    {joinedDate}
+                                  </time>
+                                </dd>
+                              </div>
                             </dl>
                           </div>
                         </div>
@@ -180,6 +176,6 @@ function ProfileDrawer({ isOpen, onClose, data }: Props) {
       </Transition.Root>
     </>
   );
-}
+};
 
 export default ProfileDrawer;

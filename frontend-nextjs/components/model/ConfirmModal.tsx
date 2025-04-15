@@ -6,7 +6,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { FiAlertTriangle } from "react-icons/fi";
-import { toast } from "react-toastify";
+import { logError } from "@/utils/logger";
 import Modal from "./Modal";
 import Button from "../Button";
 
@@ -30,7 +30,7 @@ function ConfirmModal({ isOpen, onClose }: Props) {
         router.push("/conversations");
         router.refresh();
       })
-      .catch(() => toast.error("Something Went Wrong"))
+      .catch(() => logError("Something Went Wrong"))
       .finally(() => setIsLoading(false));
   }, [conversationId, router, onClose]);
 

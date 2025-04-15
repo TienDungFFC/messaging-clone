@@ -1,13 +1,38 @@
 "use client";
 
-import { User } from "@prisma/client";
+import { User } from "@/types";
 import UserBox from "./UserBox";
+import { useEffect, useState } from "react";
+import LoadingSpinner from "./LoadingSpinner";
+import { getAllUsers } from "@/services/userService";
 
-type Props = {
-  items: User[];
-};
+function UserList() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-function UserList({ items }: Props) {
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const result = await getAllUsers();
+        
+        if (result.success && result.users) {
+          setUsers(result.users);
+        } else {
+          setError(result.message || "Failed to load users");
+        }
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        setError("Error loading users. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   return (
     <aside className="fixed inset-y-0 pb-20 lg:pb-0 lg:left-20 lg:w-80 lg:block overflow-y-auto border-r border-gray-200 dark:border-gray-700 block w-full left-0 dark:bg-black">
       <div className="px-5">
@@ -16,9 +41,22 @@ function UserList({ items }: Props) {
             People
           </div>
         </div>
-        {items.map((item) => (
-          <UserBox key={item.id} data={item} />
-        ))}
+        
+        {loading ? (
+          <div className="flex justify-center items-center h-40">
+            <LoadingSpinner />
+          </div>
+        ) : error ? (
+          <div className="text-red-500 text-center py-4">{error}</div>
+        ) : users.length === 0 ? (
+          <div className="text-neutral-500 text-center py-4">
+            No users found
+          </div>
+        ) : (
+          users.map((user) => (
+            <UserBox key={user.id} data={user} />
+          ))
+        )}
       </div>
     </aside>
   );

@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { toast } from "react-toastify";
+import { logError } from "@/utils/logger";
 
 import Button from "../Button";
 import Input from "../input/Input";
@@ -53,7 +53,7 @@ function SettingsModal({ isOpen, onClose, currentUser }: Props) {
         router.refresh();
         onClose();
       })
-      .catch(() => toast.error("Something went wrong"))
+      .catch(() => logError("Something went wrong"))
       .finally(() => setIsLoading(false));
   };
 

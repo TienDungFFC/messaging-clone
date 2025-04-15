@@ -2,15 +2,14 @@
 
 import Button from "@/components/Button";
 import Input from "@/components/input/Input";
-import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
-import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { AiFillFacebook } from "react-icons/ai";
 import { FcGoogle } from "react-icons/fc";
-import { toast } from "react-toastify";
+import { AiFillFacebook } from "react-icons/ai";
+import { logError, logSuccess, logInfo } from "@/utils/logger";
 import AuthSocialButton from "./AuthSocialButton";
 
 type Variant = "LOGIN" | "REGISTER";
@@ -18,16 +17,10 @@ type Variant = "LOGIN" | "REGISTER";
 type Props = {};
 
 function AuthForm({}: Props) {
-  const session = useSession();
+  const { user, login, register: registerUser } = useAuth();
   const router = useRouter();
   const [variant, setVariant] = useState<Variant>("LOGIN");
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (session?.status === "authenticated") {
-      router.push("/users");
-    }
-  }, [session?.status, router]);
 
   const toggleVariant = useCallback(() => {
     if (variant === "LOGIN") {
@@ -49,50 +42,45 @@ function AuthForm({}: Props) {
     },
   });
 
-  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
 
-    if (variant === "REGISTER") {
-      axios
-        .post("/api/register", data)
-        .then(() => signIn("credentials", data))
-        .catch(() => toast.error("Somethings Went Wrong"))
-        .finally(() => setIsLoading(false));
-    }
+    try {
+      if (variant === "REGISTER") {
+        // Use register method from useAuth
+        const success = await registerUser(data.name, data.email, data.password);
 
-    if (variant === "LOGIN") {
-      signIn("credentials", {
-        ...data,
-        redirect: false,
-      })
-        .then((callback) => {
-          if (callback?.error) {
-            toast.error("Invalid Credentials");
-          }
+        if (success) {
+          logSuccess("Registered successfully!");
+          router.push("/users");
+        } else {
+          logError("Registration failed");
+        }
+      } else {
+        // Use login method from useAuth
+        const result = await login(data.email, data.password);
 
-          if (callback?.ok && !callback?.error) {
-            toast.success("Logged In");
-            router.push("/users");
-          }
-        })
-        .finally(() => setIsLoading(false));
+        if (result.success) {
+          logSuccess("Logged in successfully!");
+          router.push("/users");
+        } else {
+          logError(result.message || "Login failed");
+        }
+      }
+    } catch (error: any) {
+      logError(error.response?.data?.message || "An error occurred");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const socialAction = (action: string) => {
     setIsLoading(true);
-
-    signIn(action, { redirect: false })
-      .then((callback) => {
-        if (callback?.error) {
-          toast.error("Invalid Credentials");
-        }
-
-        if (callback?.ok && !callback?.error) {
-          toast.success("Logged In");
-        }
-      })
-      .finally(() => setIsLoading(false));
+    
+    // For demo purposes - social login isn't implemented
+    logInfo(`${action} login coming soon!`);
+    setIsLoading(false);
   };
 
   return (
@@ -155,7 +143,7 @@ function AuthForm({}: Props) {
             />
             <AuthSocialButton
               icon={AiFillFacebook}
-              onClick={() => toast.info("This provider coming soon")}
+              onClick={() => socialAction("facebook")}
             />
           </div>
         </div>

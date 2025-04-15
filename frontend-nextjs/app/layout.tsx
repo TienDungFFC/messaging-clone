@@ -1,38 +1,38 @@
-import ActiveStatus from "@/components/ActiveStatus";
-import AuthContext from "@/context/AuthContext";
-import ThemeProvider from "@/context/ThemeProvider";
-import ToastContainerBar from "@/context/ToastContainerBar";
-import { getServerSession } from "next-auth";
 import "../styles/globals.css";
-import { authOptions } from "./api/auth/[...nextauth]/route";
+import { Inter } from 'next/font/google';
+import { Suspense } from 'react';
+import { AuthProvider } from "@/context/AuthContext";
+import ThemeProvider from "@/context/ThemeProvider";
 import { SocketProvider } from '@/context/SocketContext';
+import LoadingIndicator from "@/components/LoadingIndicator";
+
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap'  // Optimize font loading
+});
 
 export const metadata = {
-  title: "Messenger Clone",
-  description: "Messenger Clone",
-  icons:
-    "https://dl.dropboxusercontent.com/s/lx1m3kzfl8hell3/Facebook-Messenger-logo-2020.webp",
+  title: "Messaging App",
+  description: "Real-time messaging application",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
-
   return (
     <html lang="en">
-      <body>
-        <AuthContext session={session}>
-          <SocketProvider> 
+      <body className={inter.className}>
+        <Suspense fallback={<LoadingIndicator />}>
+          <AuthProvider>
             <ThemeProvider>
-              <ToastContainerBar />
-              <ActiveStatus />
-              {children}
+              <SocketProvider>
+                {children}
+              </SocketProvider>
             </ThemeProvider>
-          </SocketProvider>
-        </AuthContext>
+          </AuthProvider>
+        </Suspense>
       </body>
     </html>
   );

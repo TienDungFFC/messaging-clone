@@ -1,99 +1,71 @@
 "use client";
 
-import useConversation from "@/hooks/useConversation";
-import { socket } from "@/libs/socket";
-import { FullMessageType } from "@/type";
-import axios from "axios";
-import { find } from "lodash";
 import { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
+import messageService from "@/services/messageService";
+import useConversation from "@/hooks/useConversation";
 import MessageBox from "./MessageBox";
-import { useSession } from "next-auth/react"; 
+import { Message, User } from "@/types";
+import { useSession } from "@/hooks/useSession";
 
-type Props = {
-  initialMessages: FullMessageType[];
-};
+interface BodyProps {
+  initialMessages: Message[];
+}
 
-function Body({ initialMessages }: Props) {
+const Body: React.FC<BodyProps> = ({ initialMessages = [] }) => {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [messages, setMessages] = useState(initialMessages);
-  console.log("message:", messages);
   const { conversationId } = useConversation();
-  const { data: session } = useSession();
-  const currentUser = session?.user; 
-
+  const session = useSession();
+  const currentUser = session.user as User;
+  
+  // Mark conversation as seen when component mounts
+  // TEMPORARILY DISABLED
+  /*
   useEffect(() => {
-    axios.post(`/api/conversations/${conversationId}/seen`);
-  }, [conversationId]);
-
-  useEffect(() => {
-    socket.emit('join:conversation', conversationId);
+    if (!conversationId) return;
     
-    const messageHandler = (message: FullMessageType) => {
-      console.log("message handler: ", message);
-      
-      // Đảm bảo message có đầy đủ thông tin sender
-      if (!message.sender && currentUser && message.senderId === currentUser.id) {
-        message.sender = {
-          id: currentUser.id,
-          name: currentUser.name || "You",
-          email: currentUser.email,
-          image: currentUser.image || null
-        };
-      }
-      
-      if (message.conversationId === conversationId) {
-        setMessages((current) => {
-          if (find(current, { id: message.id })) {
-            return current;
-          }
-          return [...current, message];
-        });
-        
-        setTimeout(() => {
-          bottomRef?.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
-      
-      if (bottomRef?.current && message.senderId !== currentUser?.id) {
-        axios.post(`/api/conversations/${conversationId}/seen`);
+    // Mark the conversation as seen
+    const markAsSeen = async () => {
+      try {
+        await messageService.markConversationAsSeen(conversationId);
+      } catch (error) {
+        console.error("Failed to mark conversation as seen:", error);
       }
     };
-
-    const updateMessageHandler = (newMessage: FullMessageType) => {
-      setMessages((current) => current.map((currentMessage) => {
-        if (currentMessage.id === newMessage.id) {
-          return newMessage;
-        }
-        return currentMessage;
-      }));
-    };
-
-    socket.on("messages:new", messageHandler);
-    socket.on("message:update", updateMessageHandler);
-
-    return () => {
-      socket.emit('leave:conversation', conversationId);
-      socket.off("messages:new", messageHandler);
-      socket.off("message:update", updateMessageHandler);
-    };
-  }, [conversationId, currentUser]);
-
+    
+    markAsSeen();
+  }, [conversationId]);
+  */
+  
+  // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef?.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
+  
+  // TODO: Socket.io connection for real-time messages
+  useEffect(() => {
+    // Here we would connect to socket.io and listen for new messages
+    // For now, we'll just use the initial messages
+    return () => {
+      // Clean up socket connection
+    };
+  }, [conversationId]);
+  
   return (
-    <div className="flex-1 overflow-y-auto dark:bg-black">
-      {messages.map((message, index) => (
+    <div className="flex-1 overflow-y-auto p-4">
+      {messages.map((message, i) => (
         <MessageBox
-          isLast={index === messages.length - 1}
-          key={message.id + index}
+          key={message.id || i}
           data={message}
+          isOwn={message.senderId === currentUser?.userId}
         />
       ))}
       <div className="pt-24" ref={bottomRef} />
     </div>
   );
-}
+};
 
 export default Body;

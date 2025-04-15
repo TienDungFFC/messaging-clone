@@ -1,34 +1,48 @@
 "use client";
 
-import clsx from "clsx";
 import Link from "next/link";
-import { IconType } from "react-icons/lib";
+import clsx from "clsx";
 
-type Props = {
+interface MobileItemProps {
   href: string;
-  icon: IconType;
+  icon: any;
   active?: boolean;
-  onClick?: () => void;
-};
+  label: string;
+}
 
-function MobileItem({ href, icon: Icon, active, onClick }: Props) {
-  const handleClick = () => {
-    if (onClick) {
-      return onClick();
-    }
-  };
+const MobileItem: React.FC<MobileItemProps> = ({
+  href,
+  icon: Icon,
+  active,
+  label
+}) => {
   return (
     <Link
-      onClick={handleClick}
       href={href}
-      className={clsx(
-        `group flex gap-x-3 text-sm leading-6 font-semibold w-full justify-center p-4 text-gray-500 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900`,
-        active && "bg-gray-100 dark:bg-gray-900 text-black dark:text-white"
+      className={clsx(`
+        group 
+        flex 
+        gap-x-3 
+        text-sm 
+        leading-6 
+        font-semibold 
+        w-full 
+        justify-center 
+        p-4 
+        text-gray-500 
+        hover:text-black 
+        hover:bg-gray-100
+        dark:text-gray-400
+        dark:hover:text-white
+        dark:hover:bg-gray-800
+      `,
+        active && 'bg-gray-100 text-black dark:bg-gray-800 dark:text-white'
       )}
     >
       <Icon className="h-6 w-6" />
+      <span className="sr-only">{label}</span>
     </Link>
   );
-}
+};
 
 export default MobileItem;

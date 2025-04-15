@@ -1,13 +1,31 @@
 "use client";
 
-import useActiveChannel from "@/hooks/useActiveChannel";
+import { useEffect, useState } from 'react';
+import { useSocket } from '@/context/SocketContext';
+import { useAuth } from '@/context/AuthContext';
 
-type Props = {};
+const ActiveStatus = () => {
+  const [isMounted, setIsMounted] = useState(false);
+  const { socket, isConnected } = useSocket();
+  const { user } = useAuth();
 
-function ActiveStatus({}: Props) {
-  useActiveChannel();
+  // Don't initialize connection until component is mounted and user is available
+  useEffect(() => {
+    if (!user) return;
+    
+    setIsMounted(true);
+    
+    return () => {
+      setIsMounted(false);
+    };
+  }, [user]);
 
-  return null;
-}
+  if (!isMounted) {
+    return null;
+  }
+
+  // Rest of your component
+  return null; // Or your actual UI
+};
 
 export default ActiveStatus;

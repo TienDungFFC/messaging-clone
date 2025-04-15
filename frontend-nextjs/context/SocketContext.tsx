@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import { useSession } from "next-auth/react";
+import { useAuth } from "./AuthContext";
 
 // Use environment variable or fallback to localhost
 const CHAT_SERVICE_URL = process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 'http://localhost:3001';
@@ -15,6 +15,7 @@ type SocketContextType = {
   leaveConversation: (conversationId: string) => void;
 };
 
+// Create the context with default values
 const SocketContext = createContext<SocketContextType>({
   socket: null,
   isConnected: false,
@@ -23,20 +24,29 @@ const SocketContext = createContext<SocketContextType>({
   leaveConversation: () => {},
 });
 
+// Custom hook to use the socket context
 export const useSocket = () => useContext(SocketContext);
 
-export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ 
+// Socket provider component
+export const SocketProvider = ({ 
   children 
+}: { 
+  children: React.ReactNode 
 }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const { data: session } = useSession();
+  const { user } = useAuth();
 
   useEffect(() => {
+    if (!user) return; // Only connect if there's a user
+    
     // Initialize socket connection
     const socketInstance = io(CHAT_SERVICE_URL, {
       autoConnect: true,
       reconnection: true,
+      auth: {
+        userId: user.userId
+      }
     });
 
     // Set up event listeners
@@ -65,14 +75,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log("Cleaning up socket connection");
       socketInstance.disconnect();
     };
-  }, []);
+  }, [user]);
 
   // Helper functions for common socket operations
   const sendMessage = useCallback((conversationId: string, message: string, senderId: string) => {
     if (!socket || !isConnected) return;
-    
-    // Get current user info from session
-    const currentUser = session?.user;
     
     const messageData = {
       conversationId,
@@ -81,16 +88,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
       createdAt: new Date().toISOString(),
       // Add sender information
       sender: {
-        id: currentUser?.id || senderId,
-        name: currentUser?.name || "Unknown User",
-        email: currentUser?.email,
-        image: currentUser?.image || null
+        id: user?.userId || senderId,
+        name: user?.name || "Unknown User",
+        email: user?.email || "",
+        image: user?.avatarUrl || null
       }
     };
     
     console.log("Sending message:", messageData);
     socket.emit("message:send", messageData);
-  }, [socket, isConnected, session?.user]);
+  }, [socket, isConnected, user]);
 
   const joinConversation = useCallback((conversationId: string) => {
     if (!socket || !isConnected) return;
@@ -101,18 +108,23 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const leaveConversation = useCallback((conversationId: string) => {
     if (!socket || !isConnected) return;
     console.log("Leaving conversation:", conversationId);
-    socket.emit("leave", conversationId);
+    socket.emit("leave:conversation", conversationId);
   }, [socket, isConnected]);
 
+  const value = {
+    socket, 
+    isConnected, 
+    sendMessage,
+    joinConversation,
+    leaveConversation
+  };
+
   return (
-    <SocketContext.Provider value={{ 
-      socket, 
-      isConnected, 
-      sendMessage,
-      joinConversation,
-      leaveConversation
-    }}>
+    <SocketContext.Provider value={value}>
       {children}
     </SocketContext.Provider>
   );
 };
+
+// Export the context if needed elsewhere
+export default SocketContext;

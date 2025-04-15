@@ -1,26 +1,11 @@
 "use client";
 
-import { ToastContainer } from "react-toastify";
+import React from 'react';
 
-import "react-toastify/dist/ReactToastify.css";
-
-type Props = {};
-
-function ToastContainerBar({}: Props) {
-  return (
-    <>
-      <ToastContainer
-        position="bottom-left"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        pauseOnFocusLoss
-        pauseOnHover
-        theme="colored"
-      />
-    </>
-  );
-}
+// This component simply serves as a placeholder for the ToastContainer
+// The actual ToastContainer is included in ToastProvider
+const ToastContainerBar = () => {
+  return null;
+};
 
 export default ToastContainerBar;

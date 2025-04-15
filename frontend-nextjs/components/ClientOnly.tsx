@@ -1,21 +1,27 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
-type Props = {
+interface ClientOnlyProps {
   children: React.ReactNode;
-};
-
-function ClientOnly({ children }: Props) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true }}
-    >
-      {children}
-    </motion.div>
-  );
 }
+
+/**
+ * Component that only renders its children on the client
+ * Prevents hydration errors from server/client mismatch
+ */
+const ClientOnly: React.FC<ClientOnlyProps> = ({ children }) => {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) {
+    return null;
+  }
+
+  return <>{children}</>;
+};
 
 export default ClientOnly;

@@ -1,28 +1,42 @@
 "use client";
 
-import { FullMessageType } from "@/type";
-import clsx from "clsx";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
-import { useSession } from "next-auth/react";
+import clsx from "clsx";
 import Image from "next/image";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import Avatar from "../Avatar";
-import ImageModel from "../model/ImageModel";
+import ImageModal from "../ImageModal";
+import { getCurrentUser } from "@/utils/auth";
 
-type Props = {
-  data: FullMessageType;
+interface Message {
+  messageId: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar: string;
+  content: string;
+  timestamp: string;
+  createdAt: string;
+  status: string;
+  conversationId: string;
+  messageType: string;
+  seen?: Array<{userId: string, name: string}>;
+}
+
+interface MessageBoxProps {
+  data: Message;
   isLast?: boolean;
-};
+}
 
-function MessageBox({ data, isLast }: Props) {
-  console.log("data in message box:", data)
-  const session = useSession();
-  const [imageModelOpen, setImageModelOpen] = useState(false);
-
-  const isOwn = session?.data?.user?.email === data?.sender?.email;
+const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
+  const currentUser = getCurrentUser();
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  
+  const isOwn = currentUser?.userId === data.senderId;
+  
+  // Format seen list if available
   const seenList = (data.seen || [])
-    .filter((user) => user.email !== data?.sender?.email)
+    .filter((user) => user.userId !== data.senderId)
     .map((user) => user.name)
     .join(", ");
 
@@ -32,50 +46,56 @@ function MessageBox({ data, isLast }: Props) {
   const message = clsx(
     "text-sm w-fit overflow-hidden",
     isOwn ? "bg-sky-500 text-white" : "bg-gray-100 dark:bg-gray-900",
-    data.image ? "rounded-md p-0" : "rounded-2xl py-2 px-3"
+    data.messageType === "image" ? "rounded-md p-0" : "rounded-2xl py-2 px-3"
   );
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{
-        duration: 0.3,  
-        delay: 0.1,    
+        duration: 0.8,
+        delay: 0.5,
         ease: [0, 0.71, 0.2, 1.01],
       }}
       className={container}
     >
       <div className={avatar}>
-        {/* Add null check for Avatar component */}
-        {data.sender && <Avatar user={data.sender} />}
+        <Avatar 
+          user={{
+            image: data.senderAvatar,
+            name: data.senderName
+          }} 
+        />
       </div>
       <div className={body}>
         <div className="flex items-center gap-1">
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            {data.sender?.name || "Unknown User"}
+            {data.senderName}
           </div>
           <div className="text-xs text-gray-400 dark:text-gray-300">
-            {format(new Date(data.createdAt), "p")}
+            {format(new Date(data.createdAt || data.timestamp), "p")}
           </div>
         </div>
         <div className={message}>
-          <ImageModel
-            src={data.image}
-            isOpen={imageModelOpen}
-            onClose={() => setImageModelOpen(false)}
-          />
-          {data.image ? (
-            <Image
-              alt="Image"
-              height="288"
-              width="288"
-              onClick={() => setImageModelOpen(true)}
-              src={data.image}
-              className="object-cover cursor-pointer hover:scale-110 transition translate"
-            />
+          {data.messageType === "image" ? (
+            <>
+              <ImageModal
+                src={data.content}
+                isOpen={imageModalOpen}
+                onClose={() => setImageModalOpen(false)}
+              />
+              <Image
+                alt="Image"
+                height={288}
+                width={288}
+                onClick={() => setImageModalOpen(true)}
+                src={data.content}
+                className="object-cover cursor-pointer hover:scale-110 transition translate"
+              />
+            </>
           ) : (
-            <div className="max-w-[350px]">{data.body ? data.body : data.message}</div>
+            <div className="max-w-[350px]">{data.content}</div>
           )}
         </div>
         {isLast && isOwn && seenList.length > 0 && (

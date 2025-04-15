@@ -1,160 +1,97 @@
 "use client";
 
-import { useSocket } from "@/context/SocketContext";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { HiPaperAirplane, HiPhoto } from "react-icons/hi2";
-import axios from "axios";
-import { CldUploadButton } from "next-cloudinary";
-import useConversation from "@/hooks/useConversation";
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useState, useCallback } from "react";
+import { api } from "@/utils/auth";
 
-function Form() {
-  const { conversationId } = useConversation();
-  const { socket, isConnected, sendMessage, joinConversation } = useSocket();
+interface FormProps {
+  conversationId: string;
+  onMessageSent?: () => void;
+}
+
+const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
+  const [messageText, setMessageText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const session = useSession();
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FieldValues>({
-    defaultValues: {
-      message: "",
-    },
-  });
-
-  // Join the conversation on component mount
-  useEffect(() => {
-    if (conversationId && isConnected && socket) {
-      joinConversation(conversationId);
-      
-      if (session.data?.user) {
-        socket.emit('user:connect', {
-          userId: session.data.user.id,
-          email: session.data.user.email
-        });
-      }
-    }
+  const sendMessage = useCallback(async () => {
+    if (!messageText.trim()) return;
     
-    return () => {
-      // Clean up when component unmounts
-      if (socket && conversationId) {
-        socket.emit('leave', conversationId);
-      }
-    };
-  }, [conversationId, isConnected, socket, joinConversation, session.data]);
-
-  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
-      
-      // Clear the input field immediately for better UX
-      setValue("message", "", { shouldValidate: true });
-      
-      // Send via REST API
-      const response = await axios.post("/api/messages", {
-        ...data,
-        conversationId,
+      // Send message directly to chat service
+      await api.post(`/api/conversations/${conversationId}/messages`, {
+        content: messageText,
+        messageType: 'text'
       });
-      console.log("response:", response.data);
-      // If API call successful, also emit via socket
-      if (response.data && isConnected) {
-        sendMessage(
-          conversationId, 
-          data.message,
-          response.data.senderId
-        );
+      
+      setMessageText("");
+      
+      // Notify parent component that a message was sent
+      if (onMessageSent) {
+        onMessageSent();
       }
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [messageText, conversationId, onMessageSent]);
 
-  const handleUpload = async (result: any) => {
-    try {
-      setIsLoading(true);
-      
-      // Send image via REST API
-      const response = await axios.post("/api/messages", {
-        image: result.info.secure_url,
-        conversationId,
-      });
-      
-      // If API call successful, also emit via socket
-      if (response.data && socket) {
-        socket.emit("message:send", {
-          conversationId,
-          image: result.info.secure_url,
-          senderId: response.data.senderId,
-          createdAt: new Date().toISOString()
-        });
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    } finally {
-      setIsLoading(false);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
   return (
-    <div className="py-4 px-4 bg-white dark:bg-black border-t dark:border-t-gray-600 flex items-center gap-2 lg:gap-4 w-full">
-      <CldUploadButton
-        options={{ maxFiles: 1 }}
-        onUpload={handleUpload}
-        uploadPreset="mwmercnn"
+    <div className="p-4 bg-white border-t flex items-center gap-2 lg:gap-4 w-full">
+      <textarea
+        value={messageText}
+        onChange={(e) => setMessageText(e.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={isLoading}
+        placeholder="Type a message..."
+        className="
+          flex-grow
+          border-0 
+          bg-gray-100 
+          resize-none 
+          rounded-md
+          p-3
+          focus:ring-1
+          focus:ring-blue-500
+          focus:outline-none
+          min-h-[40px]
+          max-h-[120px]
+        "
+      />
+      <button
+        onClick={sendMessage}
+        disabled={isLoading || !messageText.trim()}
+        type="button"
+        className="
+          rounded-full 
+          p-2 
+          bg-blue-500 
+          cursor-pointer 
+          hover:bg-blue-600 
+          transition
+          disabled:opacity-50
+          disabled:cursor-not-allowed
+        "
       >
-        <HiPhoto size={30} className="text-sky-500" />
-      </CldUploadButton>
-      
-      <form 
-        onSubmit={handleSubmit(onSubmit)} 
-        className="flex items-center gap-2 lg:gap-4 w-full"
-      >
-        <div className="relative w-full">
-          <input
-            type="text"
-            {...register("message", { required: true })}
-            placeholder="Write a message"
-            className="
-              text-black
-              dark:text-white
-              font-light
-              py-2
-              px-4
-              bg-neutral-100 
-              dark:bg-neutral-800
-              w-full 
-              rounded-full
-              focus:outline-none
-            "
-            disabled={isLoading}
-          />
-        </div>
-        <button 
-          type="submit"
-          className="
-            rounded-full 
-            p-2 
-            bg-sky-500 
-            cursor-pointer 
-            hover:bg-sky-600 
-            transition
-          "
-          disabled={isLoading}
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          viewBox="0 0 24 24" 
+          fill="currentColor" 
+          className="w-5 h-5 text-white"
         >
-          <HiPaperAirplane
-            size={18}
-            className="text-white"
-          />
-        </button>
-      </form>
+          <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+        </svg>
+      </button>
     </div>
   );
-}
+};
 
 export default Form;

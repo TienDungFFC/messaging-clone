@@ -1,0 +1,65 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+.terraform.lock.hcl
+
+# Logs
+*.log
+
+# Bỏ qua file state của Terraform
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Bỏ qua các file local values
+*.tfvars
+*.tfvars.json
+
+# Bỏ qua file override
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Bỏ qua file lock
+.terraform.lock.hcl
+
+# Bỏ qua các file crash log
+crash.log
+crash.*.log
+
+# Bỏ qua các file cấu hình terraform
+.terraformrc
+terraform.rc
+
+# Bỏ qua các thư mục .terragrunt-cache nếu bạn dùng Terragrunt
+.terragrunt-cache/
+
+# Bỏ qua các file plan output
+*.tfplan
+tfplan
+
+# Bỏ qua các file .terraform.d
+.terraform.d/
+
+# Bỏ qua các file .env có thể chứa thông tin nhạy cảm
+.env
+*.env
+
+# Bỏ qua file .DS_Store trên macOS
+.DS_Store
+
+# Bỏ qua các thư mục và file tạm thời
+*.tmp
+*.bak
+*.swp
+*.backup

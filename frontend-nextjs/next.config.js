@@ -9,6 +9,8 @@ const nextConfig = {
       "res.cloudinary.com",
       "lh3.googleusercontent.com",
       "dl.dropboxusercontent.com",
+      "avatar.iran.liara.run",
+      "ui-avatars.com"
     ],
   },
 };
