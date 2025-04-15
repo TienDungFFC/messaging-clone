@@ -3,32 +3,39 @@ export interface User {
   name: string;
   email: string;
   avatarUrl?: string;
+  status?: string;
+  lastSeen?: string;
+  createdAt?: string;
 }
 
 export interface Conversation {
   conversationId: string;
-  name: string; // Changed from optional to required
-  lastMessagePreview?: string;
-  lastMessageAt?: string;
+  name: string;
   type: 'direct' | 'group';
   participantIds: string[];
-  createdAt: string;
-  updatedAt: string;
-  otherUser?: User; // Add this for direct conversations
+  lastMessageAt?: string;
+  lastMessagePreview?: string;
+  otherUser?: {
+    userId: string;
+    name: string;
+    avatarUrl?: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Message {
   messageId: string;
-  conversationId: string;
   senderId: string;
-  content: string;
-  messageType: 'text' | 'image' | 'file';
-  status: 'sent' | 'delivered' | 'read';
-  timestamp: string;
-  createdAt: string;
-  updatedAt: string;
   senderName: string;
-  senderAvatar?: string;
+  senderAvatar: string;
+  content: string;
+  timestamp: string;
+  status: string;
+  conversationId: string;
+  messageType: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ReadReceipt {

@@ -1,6 +1,5 @@
 import * as Conversation from '../models/Conversation.js';
 import * as User from '../models/User.js';
-import Message from '../models/Message.js';
 
 /**
  * Get all conversations for the current user
@@ -188,8 +187,9 @@ export const getConversationById = async (req, res) => {
 };
 
 /**
- * Mark conversation as seen
+ * Mark conversation as seen - TEMPORARILY DISABLED
  */
+/*
 export const markConversationAsSeen = async (req, res) => {
   try {
     const { conversationId } = req.params;
@@ -226,3 +226,4 @@ export const markConversationAsSeen = async (req, res) => {
     });
   }
 };
+*/

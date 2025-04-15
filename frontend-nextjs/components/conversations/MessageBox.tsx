@@ -13,7 +13,7 @@ interface Message {
   messageId: string;
   senderId: string;
   senderName: string;
-  senderAvatar: string;
+  senderAvatar?: string;
   content: string;
   timestamp: string;
   createdAt: string;
@@ -51,11 +51,11 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
+      initial={{ opacity: 0, scale: 0.2 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{
-        duration: 0.8,
-        delay: 0.5,
+        duration: 0.2,
+        delay: 0.1,
         ease: [0, 0.71, 0.2, 1.01],
       }}
       className={container}
@@ -63,7 +63,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
       <div className={avatar}>
         <Avatar 
           user={{
-            image: data.senderAvatar,
+            image: data.senderAvatar || '/assets/placeholder.jpg',
             name: data.senderName
           }} 
         />

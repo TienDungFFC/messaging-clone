@@ -51,7 +51,7 @@ export async function createUser(email, name, password, avatarUrl = '') {
  * @param {String} userId 
  * @returns {Promise<Object>} The user
  */
-export async function getUserById(userId) {
+export async function getById(userId) {
   try {
     return await DB.get({
       TableName: process.env.DYNAMODB_TABLE || 'ChatTable',
@@ -222,7 +222,7 @@ export async function changeUserPassword(userId, newPassword) {
  * @param {String} password 
  * @returns {Promise<Object>} Result with user and token if successful
  */
-export async function loginUser(email, password) {
+export async function login(email, password) {
   try {
     // Find user by email
     const user = await findUserByEmail(email);

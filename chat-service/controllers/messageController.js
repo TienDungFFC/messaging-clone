@@ -1,6 +1,5 @@
 import * as Message from '../models/Message.js';
 import * as Conversation from '../models/Conversation.js';
-import * as ReadReceipt from '../models/ReadReceipt.js';
 
 /**
  * Get messages for a conversation

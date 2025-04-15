@@ -26,7 +26,6 @@ export const authenticate = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, jwtSecret);
-    console.log('Decoded token:', decoded);
     const user = await User.getById(decoded.id);
     if (!user) {
       return res.status(200).json({

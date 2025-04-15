@@ -8,7 +8,10 @@ import conversationRoutes from './routes/conversationRoutes.js';
 import authRoutes from './routes/authRoutes.js'; // Assuming auth routes exist
 import userRoutes from './routes/userRoutes.js'; // Assuming user routes exist
 
-// Import DB module
+// Import Message và Conversation models
+import * as Message from './models/Message.js';
+import * as Conversation from './models/Conversation.js';
+import * as User from './models/User.js';
 
 import cors from 'cors';
 
@@ -42,8 +45,8 @@ const io = new Server(server, {
   },
 });
 
-const pubClient = createClient().duplicate();
-const subClient = createClient().duplicate();
+const pubClient = createClient();
+const subClient = createClient();
 
 pubClient.on('error', (err) => {
   console.error('Redis pubClient error:', err);
@@ -53,10 +56,18 @@ subClient.on('error', (err) => {
   console.error('Redis subClient error:', err);
 });
 
-pubClient.connect();
-subClient.connect();
-
-io.adapter(createAdapter(pubClient, subClient));
+// Connect to Redis only if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    pubClient.connect();
+    subClient.connect();
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log('Connected to Redis');
+  } catch (error) {
+    console.error('Error connecting to Redis:', error);
+    console.warn('Socket.io will run without Redis adapter');
+  }
+}
 
 // Track users and their conversations
 const userConversations = new Map();
@@ -92,22 +103,60 @@ io.on('connection', (socket) => {
   });
 
   socket.on('message:send', async (data) => {
-    console.log('Received message:', data);
-    const { conversationId } = data;
-    if (!conversationId) {
-      console.error('No conversation ID provided');
+    console.log('Received message via socket:', data);
+    const { conversationId, message, messageType = 'text', senderId, createdAt, sender } = data;
+    
+    if (!conversationId || !message || !senderId) {
+      console.error('Missing required message data');
+      socket.emit('error', { message: 'Missing required message data' });
       return;
     }
-    data.createdAt = data.createdAt || new Date().toISOString();
+    
     try {
-      const messageId = await db.saveMessage(data);
-      data.messageId = messageId;
-      io.to(conversationId).emit('message:new', data);
-      console.log(`Message sent to conversation ${conversationId}`);
+      // Chuẩn bị thông tin người gửi từ dữ liệu nhận được
+      const senderInfo = {
+        senderName: sender?.name || 'Unknown User',
+        senderAvatar: sender?.image || ''
+      };
+      
+      // Tạo tin nhắn mới trong cơ sở dữ liệu
+      const savedMessage = await Message.create(
+        conversationId,
+        senderId,
+        message,  // Sử dụng 'message' từ dữ liệu nhận được
+        messageType || 'text',
+        senderInfo
+      );
+      
+      if (!savedMessage) {
+        socket.emit('error', { message: 'Failed to save message' });
+        return;
+      }
+      
+      // Phát sóng tin nhắn mới đến tất cả người dùng trong cuộc trò chuyện
+      io.to(conversationId).emit('message:new', savedMessage);
+      
+      console.log(`Message broadcast to conversation ${conversationId}`);
     } catch (error) {
       console.error('Error saving message:', error);
-      socket.emit('error', { message: 'Unable to save message' });
+      socket.emit('error', { message: 'Error saving message' });
     }
+  });
+
+  // Typing indicators
+  socket.on('typing', (data) => {
+    const { conversationId, userId } = data;
+    if (!conversationId || !userId) return;
+    
+    // Broadcast typing event to conversation except sender
+    socket.to(conversationId).emit('user:typing', { userId, conversationId });
+  });
+  
+  socket.on('stop:typing', (data) => {
+    const { conversationId, userId } = data;
+    if (!conversationId || !userId) return;
+    
+    socket.to(conversationId).emit('user:stop:typing', { userId, conversationId });
   });
 
   socket.on('disconnect', () => {
@@ -126,10 +175,18 @@ io.on('connection', (socket) => {
 
 // Start the server
 (async () => {
-  await io.of('/').adapter.init();
+  try {
+    if (process.env.NODE_ENV !== 'test' && io.of('/').adapter.init) {
+      await io.of('/').adapter.init();
+    }
 
-  const PORT = process.env.PORT || 3001;
-  server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-  });
+    const PORT = process.env.PORT || 3001;
+    server.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error starting server:', error);
+  }
 })();
+
+export { app, server };

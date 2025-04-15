@@ -12,7 +12,7 @@ export default function Home() {
             height="58"
             width="58"
             className="mx-auto w-auto"
-            src="https://dl.dropboxusercontent.com/s/lx1m3kzfl8hell3/Facebook-Messenger-logo-2020.webp"
+            src="https://cdn0.iconfinder.com/data/icons/most-usable-logos/120/Email-512.png"
           />
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
             Sign in to your Account

@@ -10,7 +10,7 @@ const CHAT_SERVICE_URL = process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 'http://loc
 type SocketContextType = {
   socket: Socket | null;
   isConnected: boolean;
-  sendMessage: (conversationId: string, message: string, senderId: string) => void;
+  sendMessage: (conversationId: string, content: string, senderId: string, messageType?: string) => void;
   joinConversation: (conversationId: string) => void;
   leaveConversation: (conversationId: string) => void;
 };
@@ -40,6 +40,8 @@ export const SocketProvider = ({
   useEffect(() => {
     if (!user) return; // Only connect if there's a user
     
+    console.log('Initializing socket connection with user:', user.userId);
+    
     // Initialize socket connection
     const socketInstance = io(CHAT_SERVICE_URL, {
       autoConnect: true,
@@ -51,13 +53,25 @@ export const SocketProvider = ({
 
     // Set up event listeners
     socketInstance.on("connect", () => {
-      console.log("Socket connected");
+      console.log("Socket connected with ID:", socketInstance.id);
       setIsConnected(true);
+      
+      // Emit user:connect event with user data
+      socketInstance.emit('user:connect', {
+        userId: user.userId,
+        email: user.email,
+        name: user.name
+      });
     });
 
     socketInstance.on("disconnect", () => {
       console.log("Socket disconnected");
       setIsConnected(false);
+    });
+
+    // Listen for user joining events
+    socketInstance.on('user:joined', (data) => {
+      console.log('User joined conversation:', data);
     });
 
     socketInstance.on("error", (error) => {
@@ -78,20 +92,21 @@ export const SocketProvider = ({
   }, [user]);
 
   // Helper functions for common socket operations
-  const sendMessage = useCallback((conversationId: string, message: string, senderId: string) => {
-    if (!socket || !isConnected) return;
+  const sendMessage = useCallback((conversationId: string, message: string, senderId: string, messageType: string = 'text') => {
+    if (!socket || !isConnected || !user) return;
     
+    // Tạo payload theo cấu trúc đúng
     const messageData = {
       conversationId,
-      message,
+      message, // Sử dụng 'message' thay vì 'content'
       senderId,
+      messageType,
       createdAt: new Date().toISOString(),
-      // Add sender information
       sender: {
-        id: user?.userId || senderId,
-        name: user?.name || "Unknown User",
-        email: user?.email || "",
-        image: user?.avatarUrl || null
+        id: user.userId,  // Sử dụng 'id' cho senderId trong đối tượng sender
+        name: user.name,
+        email: user.email,
+        image: user.avatarUrl || null
       }
     };
     
@@ -99,10 +114,20 @@ export const SocketProvider = ({
     socket.emit("message:send", messageData);
   }, [socket, isConnected, user]);
 
+  // Improved joinConversation function with better logging
   const joinConversation = useCallback((conversationId: string) => {
-    if (!socket || !isConnected) return;
-    console.log("Joining conversation:", conversationId);
+    if (!socket || !isConnected) {
+      console.warn(`Cannot join conversation ${conversationId}: Socket ${socket ? 'not connected' : 'not initialized'}`);
+      return;
+    }
+    
+    console.log(`Joining conversation: ${conversationId} with socket ID: ${socket.id}`);
     socket.emit("join:conversation", conversationId);
+    
+    // Provide confirmation
+    socket.on(`joined:${conversationId}`, () => {
+      console.log(`Successfully joined conversation: ${conversationId}`);
+    });
   }, [socket, isConnected]);
 
   const leaveConversation = useCallback((conversationId: string) => {

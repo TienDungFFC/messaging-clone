@@ -10,7 +10,8 @@ const nextConfig = {
       "lh3.googleusercontent.com",
       "dl.dropboxusercontent.com",
       "avatar.iran.liara.run",
-      "ui-avatars.com"
+      "ui-avatars.com",
+      "cdn0.iconfinder.com",
     ],
   },
 };

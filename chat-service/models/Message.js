@@ -163,7 +163,7 @@ export async function getByConversation(conversationId, limit = 50, lastEvaluate
       ':msgPrefix': 'MSG#' 
     },
     Limit: limit,
-    ScanIndexForward: false // For descending order (newest first)
+    ScanIndexForward: true
   };
   
   if (lastEvaluatedKey) {

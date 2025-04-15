@@ -10,10 +10,12 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import conversationService from "@/services/conversationService";
 import messageService from "@/services/messageService";
 import { Conversation, Message } from "@/types";
+import { useSocket } from "@/context/SocketContext";
 
-const ConversationIdPage = () => {
+export default function ConversationIdPage() {
   const params = useParams();
   const conversationId = params?.conversationId as string;
+  const { socket, isConnected } = useSocket();
   
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [initialMessages, setInitialMessages] = useState<Message[]>([]);
@@ -36,10 +38,15 @@ const ConversationIdPage = () => {
         if (convResult.success && convResult.conversation) {
           setConversation(convResult.conversation);
           
-          // Fetch messages only if conversation was found
           const msgResult = await messageService.getMessages(conversationId);
           if (msgResult.success && msgResult.messages) {
-            setInitialMessages(msgResult.messages);
+            const processedMessages: Message[] = msgResult.messages.map(msg => ({
+              ...msg,
+              senderAvatar: msg.senderAvatar || '/assets/placeholder.jpg',
+              status: msg.status || 'sent'
+            }));
+            
+            setInitialMessages(processedMessages);
           } else {
             console.warn("Could not fetch messages:", msgResult.message);
           }
@@ -56,6 +63,13 @@ const ConversationIdPage = () => {
 
     fetchData();
   }, [conversationId]);
+
+  // Log socket connection status
+  useEffect(() => {
+    if (conversationId) {
+      console.log(`Socket connection status for conversation ${conversationId}: ${isConnected ? 'connected' : 'disconnected'}`);
+    }
+  }, [conversationId, isConnected]);
 
   // Show loading state
   if (isLoading) {
@@ -85,6 +99,4 @@ const ConversationIdPage = () => {
       </div>
     </div>
   );
-};
-
-export default ConversationIdPage;
+}
