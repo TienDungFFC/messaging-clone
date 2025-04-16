@@ -27,7 +27,7 @@ interface MessageBoxProps {
   data: Message;
   isLast?: boolean;
   isTyping?: boolean;
-  isSeen: boolean;
+  isSeen?: boolean;
   otherUser?: string;
 }
 

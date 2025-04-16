@@ -38,6 +38,7 @@ export interface Message {
   messageType: string;
   createdAt: string;
   updatedAt?: string;
+  isSeen?: boolean;
 }
 
 export interface ReadReceipt {

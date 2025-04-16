@@ -22,6 +22,9 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
   const { joinConversation, socket } = useSocket();
   const [typingUsers, setTypingUsers] = useState<Record<string, number>>({});
   const currentUser = getCurrentUser();
+  const seenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastMarkedConversationRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (!socket || !conversationId) return;
 
@@ -72,19 +75,20 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
       behavior: "smooth",
     });
   }, [messages]);
+
   useEffect(() => {
     const handleScroll = () => {
       if (bottomRef.current) {
         const { scrollTop, scrollHeight, clientHeight } = bottomRef.current;
-        if (scrollHeight - scrollTop <= clientHeight) {
+        
+        if (scrollHeight - scrollTop <= clientHeight + 100 && messages.length > 0) {
           const lastMessage = messages[messages.length - 1];
-          const currentTime = new Date().toISOString();
-          const lastMessageTime = lastMessage.createdAt;
-          // Nếu thời gian hiện tại lớn hơn thời gian tin nhắn cuối, gọi API để đánh dấu "seen"
-          markConversationAsSeen(conversationId);
-          // if (new Date(currentTime) > new Date(lastMessageTime)) {
-          //   markConversationAsSeen(conversationId);
-          // }
+          
+          if (lastMessage && 
+              lastMessage.senderId !== currentUser?.id && 
+              !lastMessage.isSeen) {
+            markConversationAsSeen(conversationId);
+          }
         }
       }
     };
@@ -93,29 +97,42 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
     return () => {
       bottomRef.current?.removeEventListener("scroll", handleScroll);
     };
-  }, [messages, conversationId]);
+  }, [messages, conversationId, currentUser?.id]);
 
   const markConversationAsSeen = async (conversationId: string) => {
-    try {
-      const response = await conversationService.markConversationAsSeen(
-        conversationId
-      );
-      if (response.success) {
-        console.log("Conversation marked as seen");
-        setMessages((prevMessages) =>
-          prevMessages.map((message) =>
-            message.conversationId === conversationId
-              ? { ...message, isSeen: "true" }
-              : message
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error marking conversation as seen", error);
+    if (lastMarkedConversationRef.current === conversationId) {
+      return;
     }
+    
+    if (seenTimeoutRef.current) {
+      clearTimeout(seenTimeoutRef.current);
+    }
+    
+    seenTimeoutRef.current = setTimeout(async () => {
+      try {
+        lastMarkedConversationRef.current = conversationId;
+        
+        const response = await conversationService.markConversationAsSeen(conversationId);
+        
+        if (response.success) {
+          setMessages((prevMessages) =>
+            prevMessages.map((message) =>
+              message.conversationId === conversationId
+              ? { ...message, isSeen: true }
+              : message
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Error marking conversation as seen", error);
+      } finally {
+        setTimeout(() => {
+          lastMarkedConversationRef.current = null;
+        }, 5000);
+      }
+    }, 300); 
   };
 
-  // Lắng nghe tin nhắn mới
   useEffect(() => {
     if (!socket || !conversationId) return;
 
