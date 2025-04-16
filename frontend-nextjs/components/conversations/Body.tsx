@@ -5,13 +5,18 @@ import axios from "axios";
 import useConversation from "@/hooks/useConversation";
 import MessageBox from "./MessageBox";
 import { useSocket } from "@/context/SocketContext";
-import { Message } from "@/types";
+import { Message, Conversation } from "@/types";
 import { getCurrentUser } from "@/utils/auth";
+import useOtherUser from "@/hooks/useOtherUser";
 interface BodyProps {
   initialMessages: Message[];
+  conversation: Conversation;
 }
 
-const Body: React.FC<BodyProps> = ({ initialMessages }) => {
+const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
+  console.log("conversation: ", conversation);
+  const otherUser = useOtherUser(conversation);
+  console.log("otherUser: ", otherUser);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState(initialMessages);
   const { conversationId } = useConversation();
@@ -109,7 +114,7 @@ const Body: React.FC<BodyProps> = ({ initialMessages }) => {
       ))}
       <div className="pt-24" ref={bottomRef} />
       {Object.entries(typingUsers)
-        .filter(([userId]) => userId !== currentUser?.id)
+        .filter(([userId]) => userId !== currentUser?.userId)
         .map(([userId]) => {
           const fakeMessage: Message = {
             messageId: `typing-${userId}`,
@@ -119,8 +124,8 @@ const Body: React.FC<BodyProps> = ({ initialMessages }) => {
             updatedAt: new Date().toISOString(),
             timestamp: new Date().toISOString(),
             messageType: "text",
-            senderId: userId,
-            senderName: currentUser?.name ?? "Unknown User",
+            senderId: otherUser?.userId ?? "unknown ID",
+            senderName: otherUser?.name ?? "Unknown User",
             senderAvatar: "/assets/placeholder.jpg",
             status: "pending",
           };

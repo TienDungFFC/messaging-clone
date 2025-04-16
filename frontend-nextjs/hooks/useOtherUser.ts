@@ -9,6 +9,10 @@ const useOtherUser = (conversation: Conversation | { participantIds: string[], t
     const currentUserUserId = session.user?.id;
     
     // Handle the case when there's no current user (not logged in)
+    if ('otherUser' in conversation && conversation.otherUser) {
+      return conversation.otherUser;
+    }
+    
     if (!currentUserUserId) {
       return {
         userId: 'unknown',

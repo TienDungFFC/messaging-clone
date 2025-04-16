@@ -16,7 +16,7 @@ interface FormProps {
 const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
   const { socket, isConnected, sendMessage } = useSocket();
   const currentUser = useSession().user;
-
+  console.log("currentUser: ", currentUser);
   const {
     register,
     handleSubmit,
@@ -34,7 +34,7 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
 
     socket.emit("typing", {
       conversationId,
-      userId: currentUser.id,
+      userId: currentUser.userId,
     });
 
     if (typingTimeoutRef.current) {
@@ -44,7 +44,7 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("stop:typing", {
         conversationId,
-        userId: currentUser.id,
+        userId: currentUser.userId,
       });
     }, TYPING_TIMEOUT);
   };
@@ -58,11 +58,11 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
       if (socket) {
         socket.emit("stop:typing", {
           conversationId,
-          userId: currentUser?.id,
+          userId: currentUser?.userId,
         });
       }
 
-      const senderId = currentUser?.id || "";
+      const senderId = currentUser?.userId || "";
       const content = data.message;
 
       if (isConnected) {
@@ -84,7 +84,7 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
 
         if (imageUrl && conversationId) {
           // Lấy thông tin người gửi
-          const senderId = currentUser?.id || "";
+          const senderId = currentUser?.userId || "";
 
           // Gửi tin nhắn hình ảnh qua WebSocket
           if (isConnected) {

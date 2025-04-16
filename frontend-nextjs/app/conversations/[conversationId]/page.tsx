@@ -16,7 +16,7 @@ export default function ConversationIdPage() {
   const params = useParams();
   const conversationId = params?.conversationId as string;
   const { socket, isConnected } = useSocket();
-  
+
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [initialMessages, setInitialMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,20 +32,24 @@ export default function ConversationIdPage() {
 
       try {
         setIsLoading(true);
-        
+
         // Fetch conversation details
-        const convResult = await conversationService.getConversationById(conversationId);
+        const convResult = await conversationService.getConversationById(
+          conversationId
+        );
         if (convResult.success && convResult.conversation) {
           setConversation(convResult.conversation);
-          
+
           const msgResult = await messageService.getMessages(conversationId);
           if (msgResult.success && msgResult.messages) {
-            const processedMessages: Message[] = msgResult.messages.map(msg => ({
-              ...msg,
-              senderAvatar: msg.senderAvatar || '/assets/placeholder.jpg',
-              status: msg.status || 'sent'
-            }));
-            
+            const processedMessages: Message[] = msgResult.messages.map(
+              (msg) => ({
+                ...msg,
+                senderAvatar: msg.senderAvatar || "/assets/placeholder.jpg",
+                status: msg.status || "sent",
+              })
+            );
+
             setInitialMessages(processedMessages);
           } else {
             console.warn("Could not fetch messages:", msgResult.message);
@@ -67,7 +71,11 @@ export default function ConversationIdPage() {
   // Log socket connection status
   useEffect(() => {
     if (conversationId) {
-      console.log(`Socket connection status for conversation ${conversationId}: ${isConnected ? 'connected' : 'disconnected'}`);
+      console.log(
+        `Socket connection status for conversation ${conversationId}: ${
+          isConnected ? "connected" : "disconnected"
+        }`
+      );
     }
   }, [conversationId, isConnected]);
 
@@ -94,7 +102,7 @@ export default function ConversationIdPage() {
     <div className="lg:pl-80 h-full">
       <div className="h-full flex flex-col">
         <Header conversation={conversation} />
-        <Body initialMessages={initialMessages} />
+        <Body initialMessages={initialMessages} conversation={conversation} />
         <Form conversationId={conversationId} />
       </div>
     </div>
