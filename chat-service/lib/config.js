@@ -7,7 +7,7 @@ const config = {
   PORT: process.env.PORT || 3000,
   REGION: process.env.AWS_REGION || 'ap-southeast-1',
 
-  REDIS_ENDPOINT: process.env.REDIS_ENDPOINT,
+  REDIS_ENDPOINT: process.env.REDIS_URL,
   DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000',
 
   USER_TABLE: process.env.USER_TABLE,

@@ -329,7 +329,7 @@ resource "aws_ecs_service" "chat_service" {
     ignore_changes = [desired_count]
   }
 
-  depends_on = [aws_lb_listener.http_listener]
+  depends_on = [aws_lb_listener.https, aws_lb_listener.http_redirect]
   
   tags = {
     Name        = "${local.name_prefix}-chat-service"
