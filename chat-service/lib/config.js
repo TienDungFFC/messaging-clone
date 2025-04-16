@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 const config = {
   ENV_NAME: process.env.ENV_NAME,
 

@@ -12,7 +12,8 @@ export const register = async (req, res) => {
     const { name, email, password, avatarUrl } = req.body;
     
     // Check if user already exists
-    const existingUser = await User.findByEmail(email);
+    // const existingUser = await User.findByEmail(email);
+    const existingUser = await User.findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -25,8 +26,9 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
     
     // Create new user with hashed password
-    const user = await User.create(email, name, hashedPassword, avatarUrl);
-    
+    // const user = await User.create(email, name, hashedPassword, avatarUrl);
+    const user = await User.createUser(email, name, hashedPassword, avatarUrl);
+
     if (!user) {
       return res.status(500).json({
         success: false,

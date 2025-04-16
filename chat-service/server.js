@@ -7,6 +7,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import conversationRoutes from './routes/conversationRoutes.js';
 import authRoutes from './routes/authRoutes.js'; // Assuming auth routes exist
 import userRoutes from './routes/userRoutes.js'; // Assuming user routes exist
+import * as Presence from './lib/presence.js';
 
 // Import Message và Conversation models
 import * as Message from './models/Message.js';
@@ -76,12 +77,16 @@ io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
   // WebSocket event handlers
-  socket.on('user:connect', (userData) => {
+  socket.on('user:connect', async (userData) => {
     const { userId, email } = userData;
     console.log(`User ${userId} (${email}) connected with socket ${socket.id}`);
     socket.userId = userId;
     socket.userEmail = email;
-    socket.broadcast.emit('user:online', { userId, email });
+    
+    socket.connectionId = socket.id;
+    await Presence.upsert(socket.connectionId, { userId, email });
+
+    io.emit('user:online', { userId, email });
   });
 
   socket.on('join:conversation', (conversationId) => {
@@ -159,16 +164,29 @@ io.on('connection', (socket) => {
     socket.to(conversationId).emit('user:stop:typing', { userId, conversationId });
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     console.log(`Client disconnected: ${socket.id}`);
     if (socket.userId && userConversations.has(socket.userId)) {
       userConversations.delete(socket.userId);
     }
+    await Presence.remove(socket.id);
     if (socket.userId) {
       io.emit('user:offline', {
         userId: socket.userId,
         email: socket.userEmail,
       });
+    }
+  });
+  socket.on("presence:check", async (targetUserId, callback) => {
+    try {
+      const onlineUsers = await Presence.list();
+      const isOnline = onlineUsers.some(
+        (entry) => entry.meta?.userId === targetUserId
+      );
+      callback(isOnline);
+    } catch (err) {
+      console.error("Presence check failed", err);
+      callback(false);
     }
   });
 });
