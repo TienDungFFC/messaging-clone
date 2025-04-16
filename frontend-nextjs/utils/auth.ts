@@ -10,7 +10,6 @@ export const USER_DATA_KEY = 'user-data';
 
 // Type definitions
 export interface User {
-  userId: string;
   id: string;
   name: string;
   email: string;

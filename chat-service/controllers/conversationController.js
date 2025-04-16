@@ -6,7 +6,7 @@ import * as User from '../models/User.js';
  */
 export const getUserConversations = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const conversations = await Conversation.getConversationsByUser(userId);
 
     for (const conversation of conversations) {
@@ -17,7 +17,7 @@ export const getUserConversations = async (req, res) => {
           if (otherUser) {
             conversation.name = otherUser.name;
             conversation.otherUser = {
-              userId: otherUser.userId,
+              id: otherUser.userId,
               name: otherUser.name,
               avatarUrl: otherUser.avatarUrl
             };
@@ -68,7 +68,7 @@ export const createOrFindConversation = async (req, res) => {
           if (otherUser) {
             conversation.name = otherUser.name;
             conversation.otherUser = {
-              userId: otherUser.userId,
+              id: otherUser.userId,
               name: otherUser.name,
               avatarUrl: otherUser.avatarUrl
             };
@@ -112,7 +112,7 @@ export const createOrFindConversation = async (req, res) => {
         if (otherUser) {
           conversation.name = otherUser.name;
           conversation.otherUser = {
-            userId: otherUser.userId,
+            id: otherUser.userId,
             name: otherUser.name,
             avatarUrl: otherUser.avatarUrl
           };
@@ -165,7 +165,7 @@ export const getConversationById = async (req, res) => {
         if (otherUser) {
           conversation.name = otherUser.name;
           conversation.otherUser = {
-            userId: otherUser.userId,
+            id: otherUser.userId,
             name: otherUser.name,
             avatarUrl: otherUser.avatarUrl
           };

@@ -1,5 +1,4 @@
 export interface User {
-  userId: string;
   id: string;
   name: string;
   email?: string;
@@ -18,7 +17,6 @@ export interface Conversation {
   lastMessageAt?: string;
   lastMessagePreview?: string;
   otherUser?: {
-    userId: string;
     id: string;
     name: string;
     avatarUrl?: string;

@@ -33,7 +33,7 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
 
     socket.emit("typing", {
       conversationId,
-      userId: currentUser.userId,
+      userId: currentUser.id,
     });
 
     if (typingTimeoutRef.current) {
@@ -43,7 +43,7 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("stop:typing", {
         conversationId,
-        userId: currentUser.userId,
+        userId: currentUser.id,
       });
     }, TYPING_TIMEOUT);
   };
@@ -57,11 +57,11 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
       if (socket) {
         socket.emit("stop:typing", {
           conversationId,
-          userId: currentUser?.userId,
+          userId: currentUser?.id,
         });
       }
 
-      const senderId = currentUser?.userId || "";
+      const senderId = currentUser?.id || "";
       const content = data.message;
 
       if (isConnected) {

@@ -12,7 +12,6 @@ export const register = async (req, res) => {
     const { name, email, password, avatarUrl } = req.body;
     
     // Check if user already exists
-    // const existingUser = await User.findByEmail(email);
     const existingUser = await User.findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({
@@ -26,7 +25,6 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
     
     // Create new user with hashed password
-    // const user = await User.create(email, name, hashedPassword, avatarUrl);
     const user = await User.createUser(email, name, hashedPassword, avatarUrl);
 
     if (!user) {
@@ -47,18 +45,22 @@ export const register = async (req, res) => {
     }
     
     // Make sure this JWT sign uses the same secret as verification
+    // Update to use id in the token
     const token = jwt.sign(
       { id: user.userId, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
     
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    // Remove password from response and rename userId to id
+    const { password: _, userId, ...userDataWithoutPassword } = user;
     
     res.status(201).json({
       success: true,
-      user: userWithoutPassword,
+      user: {
+        id: userId,
+        ...userDataWithoutPassword
+      },
       token: loginResult.token
     });
   } catch (error) {
@@ -95,9 +97,16 @@ export const login = async (req, res) => {
       });
     }
     
+    // If user has userId in the result, transform it to id
+    let transformedUser = result.user;
+    if (result.user && result.user.userId) {
+      const { userId, ...rest } = result.user;
+      transformedUser = { id: userId, ...rest };
+    }
+    
     res.status(200).json({
       success: true,
-      user: result.user,
+      user: transformedUser,
       token: result.token
     });
   } catch (error) {
@@ -117,9 +126,16 @@ export const login = async (req, res) => {
 export const getProfile = async (req, res) => {
   try {
     // User is attached to request by auth middleware
+    // Transform userId to id if it exists
+    let user = req.user;
+    if (user && user.userId) {
+      const { userId, ...rest } = user;
+      user = { id: userId, ...rest };
+    }
+    
     res.status(200).json({
       success: true,
-      user: req.user
+      user: user
     });
   } catch (error) {
     console.error('Error getting profile:', error);
@@ -144,7 +160,10 @@ export const updateProfile = async (req, res) => {
       delete updates.email;
     }
     
-    const updatedUser = await User.updateProfile(req.user.userId, updates);
+    // Get the userId from req.user (might need to access as id or userId depending on middleware)
+    const userId = req.user.id || req.user.userId;
+    
+    const updatedUser = await User.updateProfile(userId, updates);
     
     if (!updatedUser) {
       return res.status(500).json({
@@ -153,9 +172,16 @@ export const updateProfile = async (req, res) => {
       });
     }
     
+    // Transform response to use id instead of userId
+    let transformedUser = updatedUser;
+    if (updatedUser && updatedUser.userId) {
+      const { userId, ...rest } = updatedUser;
+      transformedUser = { id: userId, ...rest };
+    }
+    
     res.status(200).json({
       success: true,
-      user: updatedUser
+      user: transformedUser
     });
   } catch (error) {
     console.error('Error updating profile:', error);

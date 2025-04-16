@@ -37,7 +37,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
   const currentUser = getCurrentUser();
   const [imageModalOpen, setImageModalOpen] = useState(false);
 
-  const isOwn = currentUser?.userId === data.senderId;
+  const isOwn = currentUser?.id === data.senderId;
 
   // Format seen list if available
   // const seenList = (data.seen || [])

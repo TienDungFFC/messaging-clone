@@ -15,7 +15,7 @@ const useOtherUser = (conversation: Conversation | { participantIds: string[], t
     
     if (!currentUserUserId) {
       return {
-        userId: 'unknown',
+        id: 'unknown',
         name: 'Unknown User',
         email: '',
       };
@@ -38,7 +38,7 @@ const useOtherUser = (conversation: Conversation | { participantIds: string[], t
     // If we don't have details, return a placeholder
     if (!otherParticipantId) {
       return {
-        userId: 'unknown',
+        id: 'unknown',
         name: 'Unknown User',
         email: '',
       };
@@ -47,7 +47,7 @@ const useOtherUser = (conversation: Conversation | { participantIds: string[], t
     // Normally we would fetch user details here or from context
     // For now, we return a placeholder with the ID
     return {
-      userId: otherParticipantId,
+      id: otherParticipantId,
       name: 'User ' + otherParticipantId.substring(0, 5),
       email: '',
     };

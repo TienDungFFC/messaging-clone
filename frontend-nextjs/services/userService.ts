@@ -66,7 +66,7 @@ export const getUserById = async (userId: string): Promise<{
     if (response.data.success && response.data.user) {
       // Transform to match frontend User type
       const user: User = {
-        id: response.data.user.userId,
+        id: response.data.user.id,
         name: response.data.user.name,
         email: response.data.user.email,
         avatarUrl: response.data.user.avatarUrl || null,

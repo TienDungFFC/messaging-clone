@@ -54,7 +54,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       autoConnect: true,
       reconnection: true,
       auth: {
-        userId: user.userId,
+        userId: user.id,
       },
     });
 
@@ -65,7 +65,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Emit user:connect event with user data
       socketInstance.emit("user:connect", {
-        userId: user.userId,
+        userId: user.id,
         email: user.email,
         name: user.name,
       });

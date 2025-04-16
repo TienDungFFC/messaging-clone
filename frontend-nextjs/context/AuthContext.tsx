@@ -61,10 +61,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log("User found in storage:", storedUser.name);
             setUser(storedUser);
           } else {
-            // Fetch user profile nếu có token nhưng không có dữ liệu user
             console.log("Fetching user profile with token...");
             try {
-              // Sử dụng instance API đã cấu hình sẵn
               const response = await api.get(`/api/auth/profile`);
               
               if (response.data.success && response.data.user) {

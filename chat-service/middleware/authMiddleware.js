@@ -35,8 +35,9 @@ export const authenticate = async (req, res, next) => {
         message: 'User not found or token is invalid.'
       });
     }
-  
+    user.id = user.userId;
     req.user = user;
+    req.user.id = user.userId;
     next();
   } catch (error) {
     console.error('Authentication error:', error);

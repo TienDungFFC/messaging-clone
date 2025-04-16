@@ -79,8 +79,8 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
     avatarUrl: "",
     isActive: false,
   };
-  const isOnline = usePresence(otherUser.userId);
-  console.log("other user id: ", otherUser.userId);
+  const isOnline = usePresence(otherUser.id);
+  console.log("other user id: ", otherUser.id);
   console.log("isOnline: ", isOnline);
   const statusText = useMemo(() => {
     if (isGroup) return `${conversation.participantIds.length} Members`;

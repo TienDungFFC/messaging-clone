@@ -14,9 +14,7 @@ interface BodyProps {
 }
 
 const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
-  console.log("conversation: ", conversation);
   const otherUser = useOtherUser(conversation);
-  console.log("otherUser: ", otherUser);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState(initialMessages);
   const { conversationId } = useConversation();
@@ -112,7 +110,7 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
       ))}
       <div className="pt-24" ref={bottomRef} />
       {Object.entries(typingUsers)
-        .filter(([userId]) => userId !== currentUser?.userId)
+        .filter(([userId]) => userId !== currentUser?.id)
         .map(([userId]) => {
           const fakeMessage: Message = {
             messageId: `typing-${userId}`,
@@ -122,7 +120,7 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
             updatedAt: new Date().toISOString(),
             timestamp: new Date().toISOString(),
             messageType: "text",
-            senderId: otherUser?.userId ?? "unknown ID",
+            senderId: otherUser?.id ?? "unknown ID",
             senderName: otherUser?.name ?? "Unknown User",
             senderAvatar: "/assets/placeholder.jpg",
             status: "pending",
