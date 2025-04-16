@@ -55,7 +55,7 @@ function UserList() {
             No users found
           </div>
         ) : (
-          users.map((user) => currentUser?.userId !== user.id ? <UserBox key={user.id} data={user} /> : '')
+          users.map((user) => currentUser?.id !== user.id ? <UserBox key={user.id} data={user} /> : '')
         )}
       </div>
     </aside>

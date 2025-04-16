@@ -50,7 +50,7 @@ function GroupChatModal({ users, onClose, isOpen }: Props) {
     const membersIds = data.members.map((member: any) => member.value);
 
     if (currentUser) {
-      membersIds.push(currentUser.userId);
+      membersIds.push(currentUser.id);
     }
 
     createOrFindConversation.createOrFindConversation(
@@ -100,7 +100,7 @@ function GroupChatModal({ users, onClose, isOpen }: Props) {
                 disabled={isLoading}
                 label="Members"
                 options={users
-                  .filter((user) => user.id !== currentUser?.userId)
+                  .filter((user) => user.id !== currentUser?.id)
                   .map((user) => ({
                     value: user.id,
                     label: user.name,
