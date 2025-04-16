@@ -18,7 +18,7 @@ router.post('/', conversationController.createOrFindConversation);
 router.get('/:conversationId', conversationController.getConversationById);
 
 // Mark conversation as seen - TEMPORARILY DISABLED
-// router.post('/:conversationId/seen', conversationController.markConversationAsSeen);
+router.post('/:conversationId/seen', conversationController.markConversationAsSeen);
 
 // Get messages for a conversation
 router.get('/:conversationId/messages', messageController.getConversationMessages);

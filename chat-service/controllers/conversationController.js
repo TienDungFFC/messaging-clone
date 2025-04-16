@@ -188,13 +188,13 @@ export const getConversationById = async (req, res) => {
 /**
  * Mark conversation as seen - TEMPORARILY DISABLED
  */
-/*
+
 export const markConversationAsSeen = async (req, res) => {
   try {
-    const { conversationId } = req.params;
-    const currentUserId = req.user.userId;
+    const { conversationId } = req.params; 
+    const currentUserId = req.user.userId; 
 
-    const conversation = await Conversation.getById(conversationId);
+    const conversation = await Conversation.getConversationById(conversationId);
 
     if (!conversation) {
       return res.status(404).json({
@@ -225,4 +225,4 @@ export const markConversationAsSeen = async (req, res) => {
     });
   }
 };
-*/
+
