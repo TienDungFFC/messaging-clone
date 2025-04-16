@@ -2,7 +2,7 @@
 
 import { User } from "@/types";
 import UserBox from "./UserBox";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import LoadingSpinner from "./LoadingSpinner";
 import { getAllUsers } from "@/services/userService";
 import { getCurrentUser } from "@/utils/auth";
