@@ -1,13 +1,3 @@
-variable "execution_role_arn" {
-  description = "ARN of the IAM role that allows ECS to execute tasks"
-  type        = string
-}
-
-variable "task_role_arn" {
-  description = "ARN of the IAM role that ECS tasks can use to call AWS services"
-  type        = string
-}
-
 variable "service" {
   description = "Name of the service"
   type        = string
@@ -35,11 +25,11 @@ variable "public_subnets" {
   default = {
     subnet1 = {
       cidr = "10.0.0.0/20"
-      az   = "us-east-1a"
+      az   = "ap-southeast-1a"
     },
     subnet2 = {
       cidr = "10.0.16.0/20"
-      az   = "us-east-1b"
+      az   = "ap-southeast-1b"
     }
   }
 }
@@ -60,12 +50,6 @@ variable "private_subnets" {
       az   = "ap-southeast-1b"
     }
   }
-}
-
-variable "environment" {
-  description = "Environment name (dev, test, prod)"
-  type        = string
-  default     = "dev"
 }
 
 variable "log_retention_days" {
@@ -95,9 +79,11 @@ variable "chat_service_desired_count" {
 variable "ecr_repository_url" {
   description = "ECR repository URL for the chat service image"
   type        = string
+  default     = "430118811750.dkr.ecr.ap-southeast-1.amazonaws.com/messaging/chat-service:latest"
 }
 
-variable "redis_endpoint" {
-  description = "Redis endpoint for the chat service"
+variable "environment" {
+  description = "Environment name (dev, staging, prod)"
   type        = string
+  default     = "dev"
 }

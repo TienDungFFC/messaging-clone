@@ -12,6 +12,13 @@ export const getAllUsers = async (req, res) => {
     
     const sanitizedUsers = users.map(user => {
       const { password, ...userWithoutPassword } = user;
+      if (userWithoutPassword.userId) {
+        const { userId, ...restOfUser } = userWithoutPassword;
+        return {
+          id: userId,
+          ...restOfUser
+        };
+      }
       return userWithoutPassword;
     });
     

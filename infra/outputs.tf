@@ -5,12 +5,12 @@ output "vpc_id" {
 
 output "public_subnet_ids" {
   description = "IDs of the created public subnets"
-  value       = aws_subnet.public_subnets[*].id
+  value = [for subnet in aws_subnet.public_subnets : subnet.id]
 }
 
 output "private_subnet_ids" {
   description = "IDs of the created private subnets"
-  value       = aws_subnet.private_subnets[*].id
+  value = [for subnet in aws_subnet.private_subnets : subnet.id]
 }
 
 output "alb_dns_name" {

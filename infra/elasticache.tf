@@ -65,7 +65,7 @@ resource "aws_elasticache_subnet_group" "messaging_cache" {
 resource "aws_security_group" "elasticache_sg" {
   name        = "${local.name_prefix}-elasticache"
   description = "Security group for ElastiCache Redis"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = aws_vpc.chat_vpc.id
   tags        = { "Name" = "${local.name_prefix}-elasticache" }
 }
 
@@ -97,65 +97,6 @@ resource "aws_cloudwatch_log_group" "elasticache_engine_log" {
   name              = "/${local.name_prefix}/elasticache/engine-log"
   retention_in_days = var.log_retention_days
   tags              = { "Name" = "${local.name_prefix}-elasticache-engine-log" }
-}
-
-# Update the ECS task definition to include Redis endpoint
-resource "aws_ecs_task_definition" "chat_task_with_redis" {
-  family                   = "${local.name_prefix}-chat-service"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = var.chat_service_cpu
-  memory                   = var.chat_service_memory
-  execution_role_arn       = aws_iam_role.chat_service_exec.arn
-  task_role_arn            = aws_iam_role.chat_service.arn
-
-  container_definitions = jsonencode([
-    {
-      name      = "${local.name_prefix}-chat-service"
-      image     = "${var.ecr_repository_url}:latest"
-      essential = true
-
-      portMappings = [
-        {
-          containerPort = 80
-          protocol      = "tcp"
-        }
-      ]
-
-      environment = [
-        {
-          name  = "NODE_ENV",
-          value = var.environment
-        },
-        {
-          name  = "REDIS_ENDPOINT",
-          value = aws_elasticache_replication_group.messaging_cache.primary_endpoint_address
-        },
-        {
-          name  = "REDIS_PORT",
-          value = "6379"
-        },
-        {
-          name  = "SERVICE_NAME",
-          value = "chat-service"
-        }
-      ]
-
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.chat_service.name
-          "awslogs-region"        = data.aws_region.current.name
-          "awslogs-stream-prefix" = "ecs"
-        }
-      }
-    }
-  ])
-  
-  depends_on = [
-    aws_cloudwatch_log_group.chat_service,
-    aws_elasticache_replication_group.messaging_cache
-  ]
 }
 
 # Variables

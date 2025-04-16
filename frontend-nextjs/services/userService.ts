@@ -20,7 +20,7 @@ export const getAllUsers = async (): Promise<{
 }> => {
   try {
     const response = await api.get('/api/users');
-    
+    console.log("response in getAllUsers: ", response)
     if (response.data.success) {
       // Transform user data to match the frontend User type
       const transformedUsers = response.data.users.map((user: any) => ({

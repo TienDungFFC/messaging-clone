@@ -82,15 +82,11 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
         const imageUrl = result?.info?.secure_url;
 
         if (imageUrl && conversationId) {
-          // Lấy thông tin người gửi
-          const senderId = currentUser?.userId || "";
+          const senderId = currentUser?.id || "";
 
-          // Gửi tin nhắn hình ảnh qua WebSocket
           if (isConnected) {
-            // Gửi tin nhắn với cấu trúc đúng và loại tin nhắn là 'image'
             sendMessage(conversationId, imageUrl, senderId, "image");
 
-            // Thông báo cho component cha
             if (onMessageSent) {
               onMessageSent();
             }

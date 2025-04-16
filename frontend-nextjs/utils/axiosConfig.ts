@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 // Create base axios instance
 export const createAPI = () => {
   const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+    baseURL: process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 'http://localhost:3001',
   });
 
   api.interceptors.request.use(
@@ -23,7 +23,6 @@ export const createAPI = () => {
           console.warn('No authentication token found for API request');
         }
       }
-      
       return config;
     },
     error => {

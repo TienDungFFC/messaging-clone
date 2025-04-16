@@ -1,10 +1,3 @@
-locals {
-  name_prefix = "${var.service}-${var.env}"
-}
-
-# Get available AZs
-data "aws_availability_zones" "available" {}
-
 # Create VPC
 resource "aws_vpc" "chat_vpc" {
   cidr_block                           = var.vpc_cidr
@@ -76,26 +69,24 @@ resource "aws_route" "public_internet_route" {
   gateway_id             = aws_internet_gateway.igw.id
 }
 
-# NAT Gateway configuration
+# Create a single NAT Gateway in one public subnet
 resource "aws_eip" "nat" {
-  for_each = aws_subnet.public_subnets
-
   domain = "vpc"
-  tags   = { Name = "${local.name_prefix}-nat-${each.value.availability_zone}" }
+  tags   = { Name = "${local.name_prefix}-nat-eip" }
 }
 
-resource "aws_nat_gateway" "nat_gw" {
-  for_each = aws_subnet.public_subnets
-
-  allocation_id = aws_eip.nat[each.key].id
-  subnet_id     = each.value.id
+# Choose the first public subnet for the NAT Gateway
+resource "aws_nat_gateway" "nat_gateway" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = values(aws_subnet.public_subnets)[0].id
   
   tags = { 
-    Name = "${local.name_prefix}-nat-${each.value.availability_zone}" 
+    Name        = "${local.name_prefix}-nat-gateway"
+    Environment = var.environment
   }
 }
 
-# Private route tables (one per AZ)
+# Update the private route tables to all use the same NAT Gateway
 resource "aws_route_table" "private_rt" {
   for_each = aws_subnet.private_subnets
 
@@ -106,21 +97,20 @@ resource "aws_route_table" "private_rt" {
   }
 }
 
-# Private route table associations
+resource "aws_route" "private_nat_route" {
+  for_each = aws_route_table.private_rt
+  
+  route_table_id         = each.value.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat_gateway.id
+}
+
+# Private route table association
 resource "aws_route_table_association" "private_rt_assoc" {
   for_each = aws_subnet.private_subnets
 
   subnet_id      = each.value.id
   route_table_id = aws_route_table.private_rt[each.key].id
-}
-
-# Private route for NAT gateway
-resource "aws_route" "private_nat_route" {
-  for_each = aws_subnet.private_subnets
-
-  route_table_id         = aws_route_table.private_rt[each.key].id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.nat_gw[each.key].id
 }
 
 # Security Group for egress traffic

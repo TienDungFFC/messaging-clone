@@ -3,7 +3,7 @@ import { getAuthToken } from './cookies';
 
 // Create a base API instance
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+  baseURL: process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 'http://localhost:3001'
 });
 
 // Add token to all API requests

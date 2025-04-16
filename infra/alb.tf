@@ -41,8 +41,10 @@ resource "aws_lb_listener" "http_listener" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.chat_tg.arn
+    target_group_arn = aws_lb_target_group.chat_service.arn
   }
+
+  depends_on = [aws_lb_target_group.chat_service]
 }
 
 # Target Group

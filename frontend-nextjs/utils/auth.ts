@@ -130,9 +130,8 @@ export const getCurrentUser = (): User | null => {
  */
 export const login = async (email: string, password: string) => {
   try {
-    // Sử dụng axios trực tiếp cho API đăng nhập (tránh xác thực ban đầu)
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/login`, 
+      `${process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 'http://localhost:3001'}/api/auth/login`, 
       { email, password },
       { withCredentials: true }
     );

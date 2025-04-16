@@ -3,7 +3,6 @@ import { Conversation, Message, User } from '@/types';
 
 // API base URL
 export const API_URL = `${process.env.NEXT_PUBLIC_CHAT_SERVICE_URL}/api` || 'http://localhost:3001/api';
-
 // Create axios instance with auth header
 const createAuthHeader = (token: string) => ({
   headers: { Authorization: `Bearer ${token}` }

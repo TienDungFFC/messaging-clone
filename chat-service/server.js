@@ -11,8 +11,6 @@ import * as Presence from './lib/presence.js';
 
 // Import Message và Conversation models
 import * as Message from './models/Message.js';
-import * as Conversation from './models/Conversation.js';
-import * as User from './models/User.js';
 
 import cors from 'cors';
 
@@ -34,6 +32,10 @@ app.get('/', (req, res) => {
   res.send('Chat service is running');
 });
 
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Attach HTTP routes
 app.use('/api/auth', authRoutes);
 app.use('/api/conversations', conversationRoutes);
@@ -46,8 +48,10 @@ const io = new Server(server, {
   },
 });
 
-const pubClient = createClient();
-const subClient = createClient();
+const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+
+const pubClient = createClient({ url: redisUrl });
+const subClient = pubClient.duplicate();
 
 pubClient.on('error', (err) => {
   console.error('Redis pubClient error:', err);
@@ -57,18 +61,12 @@ subClient.on('error', (err) => {
   console.error('Redis subClient error:', err);
 });
 
-// Connect to Redis only if not in test mode
-if (process.env.NODE_ENV !== 'test') {
-  try {
-    pubClient.connect();
-    subClient.connect();
-    io.adapter(createAdapter(pubClient, subClient));
-    console.log('Connected to Redis');
-  } catch (error) {
-    console.error('Error connecting to Redis:', error);
-    console.warn('Socket.io will run without Redis adapter');
-  }
-}
+await Promise.all([
+  pubClient.connect(),
+  subClient.connect()
+]);
+
+io.adapter(createAdapter(pubClient, subClient));
 
 // Track users and their conversations
 const userConversations = new Map();
@@ -194,10 +192,6 @@ io.on('connection', (socket) => {
 // Start the server
 (async () => {
   try {
-    if (process.env.NODE_ENV !== 'test' && io.of('/').adapter.init) {
-      await io.of('/').adapter.init();
-    }
-
     const PORT = process.env.PORT || 3001;
     server.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
