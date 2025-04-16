@@ -52,19 +52,17 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
     if (!conversationId || !data.message.trim()) return;
 
     try {
-      setValue("message", "", { shouldValidate: true });
-
-      if (socket) {
-        socket.emit("stop:typing", {
-          conversationId,
-          userId: currentUser?.id,
-        });
-      }
-
       const senderId = currentUser?.id || "";
       const content = data.message;
 
+      setValue("message", "", { shouldValidate: true });
+
       if (isConnected) {
+        socket?.emit("stop:typing", {
+          conversationId,
+          userId: currentUser?.id,
+        });
+
         sendMessage(conversationId, content, senderId, "text");
 
         if (onMessageSent) {

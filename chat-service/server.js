@@ -156,11 +156,11 @@ io.on('connection', (socket) => {
     socket.to(conversationId).emit('user:typing', { userId, conversationId });
   });
   
-  socket.on('stop:typing', (data) => {
-    const { conversationId, userId } = data;
-    if (!conversationId || !userId) return;
-    
-    socket.to(conversationId).emit('user:stop:typing', { userId, conversationId });
+  socket.on("stop:typing", ({ conversationId, userId }) => {
+    socket.to(conversationId).emit("user:stop-typing", { 
+      conversationId, 
+      userId 
+    });
   });
 
   socket.on('disconnect', async () => {

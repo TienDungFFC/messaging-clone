@@ -80,13 +80,13 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
     const handleScroll = () => {
       if (bottomRef.current) {
         const { scrollTop, scrollHeight, clientHeight } = bottomRef.current;
-        
+
         if (scrollHeight - scrollTop <= clientHeight + 100 && messages.length > 0) {
           const lastMessage = messages[messages.length - 1];
-          
-          if (lastMessage && 
-              lastMessage.senderId !== currentUser?.id && 
-              !lastMessage.isSeen) {
+
+          if (lastMessage &&
+            lastMessage.senderId !== currentUser?.id &&
+            !lastMessage.isSeen) {
             markConversationAsSeen(conversationId);
           }
         }
@@ -103,23 +103,23 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
     if (lastMarkedConversationRef.current === conversationId) {
       return;
     }
-    
+
     if (seenTimeoutRef.current) {
       clearTimeout(seenTimeoutRef.current);
     }
-    
+
     seenTimeoutRef.current = setTimeout(async () => {
       try {
         lastMarkedConversationRef.current = conversationId;
-        
+
         const response = await conversationService.markConversationAsSeen(conversationId);
-        
+
         if (response.success) {
           setMessages((prevMessages) =>
             prevMessages.map((message) =>
               message.conversationId === conversationId
-              ? { ...message, isSeen: true }
-              : message
+                ? { ...message, isSeen: true }
+                : message
             )
           );
         }
@@ -130,7 +130,7 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
           lastMarkedConversationRef.current = null;
         }, 5000);
       }
-    }, 300); 
+    }, 300);
   };
 
   useEffect(() => {
@@ -139,6 +139,14 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
     const handleNewMessage = (newMessage: Message) => {
       if (newMessage.conversationId === conversationId) {
         setMessages((prev) => [...prev, newMessage]);
+
+        if (newMessage.senderId) {
+          setTypingUsers((prev) => {
+            const updated = { ...prev };
+            delete updated[newMessage.senderId];
+            return updated;
+          });
+        }
       }
     };
 
