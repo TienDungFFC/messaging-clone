@@ -9,6 +9,14 @@ import { Message, Conversation } from "@/types";
 import { getCurrentUser } from "@/utils/auth";
 import useOtherUser from "@/hooks/useOtherUser";
 import conversationService from "@/services/conversationService";
+import TypingIndicator from "./TypingIndicator";
+
+interface TypingUser {
+  userId: string;
+  name: string;
+  timestamp: number;
+}
+
 interface BodyProps {
   initialMessages: Message[];
   conversation: Conversation;
@@ -20,7 +28,7 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
   const [messages, setMessages] = useState(initialMessages);
   const { conversationId } = useConversation();
   const { joinConversation, socket } = useSocket();
-  const [typingUsers, setTypingUsers] = useState<Record<string, number>>({});
+  const [typingUsers, setTypingUsers] = useState<Record<string, TypingUser>>({});
   const currentUser = getCurrentUser();
   const seenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastMarkedConversationRef = useRef<string | null>(null);
@@ -35,19 +43,23 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
     }: {
       conversationId: string;
       userId: string;
-      name: string;
+      name?: string;
     }) => {
       if (cid !== conversationId) return;
 
       setTypingUsers((prev) => ({
         ...prev,
-        [userId]: Date.now(),
+        [userId]: {
+          userId,
+          name: name || "Ai đó",
+          timestamp: Date.now()
+        },
       }));
 
       setTimeout(() => {
         setTypingUsers((prev) => {
           const updated = { ...prev };
-          if (Date.now() - updated[userId] >= 3000) {
+          if (updated[userId] && Date.now() - updated[userId].timestamp >= 3000) {
             delete updated[userId];
           }
           return updated;
@@ -171,7 +183,7 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
       <div className="pt-24" ref={bottomRef} />
       {Object.entries(typingUsers)
         .filter(([userId]) => userId !== currentUser?.id)
-        .map(([userId]) => {
+        .map(([userId, userInfo]) => {
           const fakeMessage: Message = {
             messageId: `typing-${userId}`,
             content: "Đang nhập...",
@@ -180,19 +192,26 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
             updatedAt: new Date().toISOString(),
             timestamp: new Date().toISOString(),
             messageType: "text",
-            senderId: otherUser?.id ?? "unknown ID",
-            senderName: otherUser?.name ?? "Unknown User",
+            senderId: userId,
+            senderName: userInfo.name || "Ai đó",
             senderAvatar: "/assets/placeholder.jpg",
             status: "pending",
           };
 
           return (
-            <MessageBox
+            <TypingIndicator
               key={fakeMessage.messageId}
-              data={fakeMessage}
-              isTyping={true}
+              userName={userInfo.name || "Ai đó"}
             />
           );
+          
+          // return (
+          //   <MessageBox
+          //     key={fakeMessage.messageId}
+          //     data={fakeMessage}
+          //     isTyping={true}
+          //   />
+          // );
         })}
     </div>
   );

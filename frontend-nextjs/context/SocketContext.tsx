@@ -25,6 +25,7 @@ type SocketContextType = {
   ) => void;
   joinConversation: (conversationId: string) => void;
   leaveConversation: (conversationId: string) => void;
+  sendTypingSignal: (conversationId: string) => void;
 };
 
 // Create the context with default values
@@ -34,6 +35,7 @@ const SocketContext = createContext<SocketContextType>({
   sendMessage: () => {},
   joinConversation: () => {},
   leaveConversation: () => {},
+  sendTypingSignal: () => {},
 });
 
 // Custom hook to use the socket context
@@ -164,12 +166,25 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     [socket, isConnected]
   );
 
+  const sendTypingSignal = useCallback(
+    (conversationId: string) => {
+      if (!socket || !isConnected || !user) return;
+      socket.emit("typing", { 
+        conversationId,
+        userId: user.id,
+        name: user.name  // Gửi tên người dùng khi typing
+      });
+    },
+    [socket, isConnected, user]
+  );
+
   const value = {
     socket,
     isConnected,
     sendMessage,
     joinConversation,
     leaveConversation,
+    sendTypingSignal,
   };
 
   return (

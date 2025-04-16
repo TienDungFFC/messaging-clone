@@ -366,6 +366,12 @@ resource "aws_lb_target_group" "chat_service" {
     Name        = "${local.name_prefix}-chat-tg"
     Environment = var.environment
   }
+
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = 86400
+    enabled         = true
+  }
 }
 
 # Auto-scaling configuration for the chat service
@@ -390,9 +396,9 @@ resource "aws_appautoscaling_policy" "chat_service_cpu" {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
 
-    target_value       = 70
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 300
+    target_value       = 30
+    scale_in_cooldown  = 60
+    scale_out_cooldown = 60
   }
 }
 
@@ -409,9 +415,9 @@ resource "aws_appautoscaling_policy" "chat_service_memory" {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
 
-    target_value       = 70
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 300
+    target_value       = 30
+    scale_in_cooldown  = 60
+    scale_out_cooldown = 60
   }
 }
 

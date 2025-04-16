@@ -77,15 +77,16 @@ io.on('connection', (socket) => {
 
   // WebSocket event handlers
   socket.on('user:connect', async (userData) => {
-    const { userId, email } = userData;
+    const { userId, email, name } = userData;
     console.log(`User ${userId} (${email}) connected with socket ${socket.id}`);
     socket.userId = userId;
     socket.userEmail = email;
+    socket.userName = name; 
     
     socket.connectionId = socket.id;
-    await Presence.upsert(socket.connectionId, { userId, email });
+    await Presence.upsert(socket.connectionId, { userId, email, name });
 
-    io.emit('user:online', { userId, email });
+    io.emit('user:online', { userId, email, name });
   });
 
   socket.on('join:conversation', (conversationId) => {
@@ -149,11 +150,15 @@ io.on('connection', (socket) => {
 
   // Typing indicators
   socket.on('typing', (data) => {
-    const { conversationId, userId } = data;
+    const { conversationId, userId, name } = data;
     if (!conversationId || !userId) return;
     
     // Broadcast typing event to conversation except sender
-    socket.to(conversationId).emit('user:typing', { userId, conversationId });
+    socket.to(conversationId).emit('user:typing', { 
+      userId, 
+      conversationId,
+      name: name || socket.userName || 'Ai đó'
+    });
   });
   
   socket.on("stop:typing", ({ conversationId, userId }) => {

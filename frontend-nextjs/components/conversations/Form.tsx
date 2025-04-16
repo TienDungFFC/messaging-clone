@@ -14,7 +14,7 @@ interface FormProps {
 }
 
 const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
-  const { socket, isConnected, sendMessage } = useSocket();
+  const { socket, isConnected, sendMessage, sendTypingSignal } = useSocket();
   const currentUser = useSession().user;
   const {
     register,
@@ -31,10 +31,7 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
   const startTyping = () => {
     if (!socket || !isConnected || !currentUser) return;
 
-    socket.emit("typing", {
-      conversationId,
-      userId: currentUser.id,
-    });
+    sendTypingSignal(conversationId);
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);

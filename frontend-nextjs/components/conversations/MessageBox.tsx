@@ -89,9 +89,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
           </div>
         </div>
         <div className={message}>
-          {isTyping ? (
-            <div className="max-w-[350px]">Đang nhập...</div>
-          ) : data.messageType === "image" ? (
+          {data.messageType === "image" ? (
             <>
               <ImageModal
                 src={data.content}
@@ -111,6 +109,19 @@ const MessageBox: React.FC<MessageBoxProps> = ({
             <div className="max-w-[350px]">{data.content}</div>
           )}
         </div>
+        {isTyping && (
+            <div className="flex items-center gap-1.5 py-1.5 px-3 bg-gray-100 dark:bg-gray-800 rounded-full max-w-fit mt-1.5 transition-all duration-200 shadow-sm">
+              <span className="font-medium text-xs text-gray-700 dark:text-gray-300">
+                {data.senderName}
+              </span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">đang nhập</span>
+              <div className="flex items-center space-x-0.5">
+                <div className="w-1 h-1 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-1 h-1 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div className="w-1 h-1 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '600ms' }}></div>
+              </div>
+            </div>
+        )}
         {isOwn && isSeen && isLast && (
           <div className="text-xs font-light text-gray-500 dark:text-gray-400">
             {`Seen by ${otherUser}`}

@@ -61,13 +61,13 @@ variable "log_retention_days" {
 variable "chat_service_cpu" {
   description = "CPU units for the chat service task"
   type        = string
-  default     = "512"
+  default     = "256"  
 }
 
 variable "chat_service_memory" {
   description = "Memory for the chat service task"
   type        = string
-  default     = "1024"
+  default     = "512"
 }
 
 variable "chat_service_desired_count" {

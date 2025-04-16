@@ -1,0 +1,60 @@
+config:
+  target: "https://chat.messenger-aws.online"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 40
+      name: "Warm up phase"
+    - duration: 180
+      arrivalRate: 40
+      name: "Sustained load phase"
+  websocket:
+    ping: 30
+    subprotocols:
+      - "socket.io"
+  defaults:
+    socketio:
+      transports: ["websocket", "polling"] 
+      query: 
+        EIO: "4"
+      reconnect: true
+
+scenarios:
+  - name: "Socket.IO chat test"
+    engine: "socketio"
+    flow:
+      - connect:
+          query:
+            EIO: "4"
+            transport: "websocket"
+      
+      - emit:
+          channel: "user:connect"
+          data:
+            userId: "test-user-{{ $randomNumber(1000, 9999) }}"
+            email: "test{{ $randomNumber(1, 1000) }}@example.com"
+      
+      - emit:
+          channel: "join:conversation"
+          data: "test-conversation-{{ $randomNumber(100, 999) }}"
+      
+      - loop:
+          - emit:
+              channel: "message:send"
+              data:
+                conversationId: "test-conversation-{{ $randomNumber(100, 999) }}"
+                message: "Load test message {{ $randomString(10) }}"
+                messageType: "text"
+                senderId: "test-user-{{ $randomNumber(1000, 9999) }}"
+                createdAt: "{{ $timestamp }}"
+                sender:
+                  id: "test-user-{{ $randomNumber(1000, 9999) }}"
+                  name: "Test User {{ $randomNumber(1, 100) }}"
+                  email: "test{{ $randomNumber(1, 1000) }}@example.com"
+          
+          - think: 2
+          
+        count: 20
+      
+      - think: 3
+      - disconnect: {}
