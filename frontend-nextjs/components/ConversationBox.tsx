@@ -4,7 +4,6 @@ import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import clsx from "clsx";
-import { getCurrentUser } from "@/utils/auth";
 import Avatar from "./Avatar";
 import useOtherUser from "@/hooks/useOtherUser";
 
@@ -15,7 +14,6 @@ interface ConversationBoxProps {
 
 const ConversationBox: React.FC<ConversationBoxProps> = ({ data, selected }) => {
   const router = useRouter();
-  const currentUser = getCurrentUser();
 
   const handleClick = useCallback(() => {
     router.push(`/conversations/${data.conversationId}`);
@@ -33,7 +31,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({ data, selected }) => 
     if (data.lastMessageAt) {
       return format(new Date(data.lastMessageAt), 'p');
     }
-    
+
     return format(new Date(data.createdAt), 'p');
   }, [data.lastMessageAt, data.createdAt]);
 
@@ -57,11 +55,11 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({ data, selected }) => 
         selected ? 'bg-neutral-100 dark:bg-neutral-800' : 'bg-white dark:bg-neutral-900'
       )}
     >
-      <Avatar 
-        user={data.type === 'direct' 
-          ? { name: otherUser?.name, image: otherUser?.avatarUrl } 
-          : { name: data.name, image: null }
-        } 
+      <Avatar
+        user={data.type === 'direct'
+          ? { name: otherUser?.name, image: otherUser?.avatarUrl, type: 'direct' }
+          : { name: data.name, image: null, type: 'group' }
+        }
       />
       <div className="min-w-0 flex-1">
         <div className="focus:outline-none">

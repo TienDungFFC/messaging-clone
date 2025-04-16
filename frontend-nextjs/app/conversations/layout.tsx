@@ -23,25 +23,24 @@ export default function ConversationsLayout({
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        
+
         // Fetch conversations
         const conversationsResult = await conversationService.getConversations();
         if (conversationsResult.success && conversationsResult.conversations) {
           setConversations(conversationsResult.conversations);
         }
-        
-        // Fetch users
-        // const usersResult = await userService.getAllUsers();
-        // if (usersResult.success && usersResult.users) {
-        //   setUsers(usersResult.users);
-        // }
+
+        const usersResult = await userService.getAllUsers();
+        if (usersResult.success && usersResult.users) {
+          setUsers(usersResult.users);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchData();
   }, []);
 
@@ -54,9 +53,9 @@ export default function ConversationsLayout({
               <LoadingSpinner />
             </div>
           ) : (
-            <ConversationList 
-              users={users} 
-              initialItems={conversations} 
+            <ConversationList
+              users={users}
+              initialItems={conversations}
             />
           )}
         </ClientOnly>

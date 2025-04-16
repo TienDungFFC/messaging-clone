@@ -2,14 +2,16 @@
 
 import { User } from "@/types";
 import UserBox from "./UserBox";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import LoadingSpinner from "./LoadingSpinner";
 import { getAllUsers } from "@/services/userService";
+import { getCurrentUser } from "@/utils/auth";
 
 function UserList() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -53,7 +55,7 @@ function UserList() {
             No users found
           </div>
         ) : (
-          users.map((user) => <UserBox key={user.id} data={user} />)
+          users.map((user) => currentUser?.id !== user.id ? <UserBox key={user.id} data={user} /> : '')
         )}
       </div>
     </aside>

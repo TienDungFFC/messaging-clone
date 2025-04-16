@@ -38,10 +38,18 @@ const ProfileDrawer = ({ isOpen, onClose, data }: any) => {
 // Placeholder for AvatarGroup - you'll need to implement this
 const AvatarGroup = ({ name }: { name: string }) => {
   return (
-    <div className="relative h-9 w-9 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+    <div className="relative h-9 w-9 rounded-full flex items-center justify-center overflow-hidden">
       <span className="text-gray-600">
-        {name?.charAt(0)?.toUpperCase() || "G"}
+        {/* {name?.charAt(0)?.toUpperCase() || "G"} */}
       </span>
+      <Image
+        // src={user?.image || "/assets/placeholder.jpg"}
+        src="/assets/group-placeholder.jpeg"
+        alt="Avatar"
+        height={100}
+        width={100}
+      />
+
     </div>
   );
 };

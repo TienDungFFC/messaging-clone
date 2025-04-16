@@ -30,7 +30,7 @@ export default function UsersPage() {
         {/* <h1 className="text-2xl font-bold">Welcome, {<us></us>er.name}!</h1> */}
         {/* <p className="text-gray-500">Find people to chat with below</p> */}
       </div>
-      
+
       <div className="flex-grow overflow-y-auto">
         <UserList />
       </div>

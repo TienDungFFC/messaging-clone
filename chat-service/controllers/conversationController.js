@@ -55,7 +55,6 @@ export const createOrFindConversation = async (req, res) => {
     }
 
     const allParticipantIds = [...new Set([currentUserId, ...participantIds])];
-    console.log("allParticipantIds: ", allParticipantIds)
     let conversation;
 
     if (!isGroup && allParticipantIds.length === 2) {
