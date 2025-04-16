@@ -14,13 +14,13 @@ interface ConversationListProps {
   currentUser: User | null;
 }
 
-const ConversationList: React.FC<ConversationListProps> = ({ 
+const ConversationList: React.FC<ConversationListProps> = ({
   initialItems,
   currentUser
 }) => {
   const [items, setItems] = useState(initialItems);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   const router = useRouter();
   const pathname = usePathname();
   const { conversationId, isOpen } = useConversation();
@@ -33,12 +33,12 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const updateItems = (newMessage: any) => {
     setItems(current => {
       const existingConversation = find(current, { conversationId: newMessage.conversationId });
-      
+
       // If the conversation doesn't exist in our list, we might want to fetch it
       if (!existingConversation) {
         return current;
       }
-      
+
       // Create a new array with the updated conversation
       return current.map(conversation => {
         if (conversation.conversationId === newMessage.conversationId) {
@@ -48,7 +48,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             lastMessageAt: newMessage.timestamp
           };
         }
-        
+
         return conversation;
       }).sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
     });
@@ -60,10 +60,10 @@ const ConversationList: React.FC<ConversationListProps> = ({
     const handleNewMessage = (message: any) => {
       updateItems(message);
     };
-    
+
     // Set up event listener for new messages
     // Example: socket.on('new-message', handleNewMessage);
-    
+
     return () => {
       // Clean up event listener
       // Example: socket.off('new-message', handleNewMessage);
@@ -90,8 +90,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
           <div className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">
             Messages
           </div>
-          <div 
-            onClick={handleCreateGroup} 
+          <div
+            onClick={handleCreateGroup}
             className="
               rounded-full 
               p-2 

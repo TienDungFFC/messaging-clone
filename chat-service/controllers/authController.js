@@ -26,7 +26,7 @@ export const register = async (req, res) => {
     
     // Create new user with hashed password
     const user = await User.createUser(email, name, hashedPassword, avatarUrl);
-
+    
     if (!user) {
       return res.status(500).json({
         success: false,

@@ -28,7 +28,6 @@ export const authenticate = async (req, res, next) => {
     const decoded = jwt.verify(token, jwtSecret);
     const user = await User.getById(decoded.id);
 
-    console.log("user", user)
     if (!user) {
       return res.status(200).json({
         success: false,

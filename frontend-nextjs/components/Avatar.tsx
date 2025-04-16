@@ -7,6 +7,7 @@ interface AvatarProps {
   user: {
     name?: string | null;
     image?: string | null;
+    type?: string;
   };
 }
 
@@ -19,7 +20,8 @@ const Avatar: React.FC<AvatarProps> = ({ user }) => {
     <div className="relative">
       <div className="relative inline-block rounded-full overflow-hidden h-9 w-9 md:h-11 md:w-11">
         <Image
-          src={user?.image || "/assets/placeholder.jpg"}
+          // src={user?.image || "/assets/placeholder.jpg"}
+          src={user.type === "group" ? "/assets/group-placeholder.jpeg" : user.image || "/assets/placeholder.jpg"}
           alt="Avatar"
           height={100}
           width={100}

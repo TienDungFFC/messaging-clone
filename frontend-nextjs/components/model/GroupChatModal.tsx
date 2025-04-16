@@ -12,6 +12,10 @@ import Select from "../input/Select";
 import Modal from "./Modal";
 import { User } from "@/types";
 
+import { getCurrentUser } from "@/utils/auth";
+
+import createOrFindConversation from "@/services/conversationService";
+
 type Props = {
   isOpen?: boolean;
   onClose: () => void;
@@ -21,6 +25,7 @@ type Props = {
 function GroupChatModal({ users, onClose, isOpen }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const currentUser = getCurrentUser();
 
   const {
     register,
@@ -37,20 +42,38 @@ function GroupChatModal({ users, onClose, isOpen }: Props) {
 
   const members = watch("members");
 
+
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     setIsLoading(true);
 
-    axios
-      .post("/api/conversations", {
-        ...data,
-        isGroup: true,
+    // get list id in members
+    const membersIds = data.members.map((member: any) => member.value);
+
+    if (currentUser) {
+      membersIds.push(currentUser.userId);
+    }
+
+    createOrFindConversation.createOrFindConversation(
+      membersIds,
+      data.name,
+      true
+    )
+      .then((response) => {
+        if (response.success && response.conversation) {
+          onClose();
+
+          router.push(`/conversations/${response.conversation.conversationId}`);
+          router.refresh();
+        } else {
+          logError(response.message || "Failed to create conversation");
+        }
       })
-      .then(() => {
-        router.refresh();
-        onClose();
+      .catch((error) => {
+        logError("Something went wrong");
       })
-      .catch(() => logError("Something went wrong"))
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (
@@ -76,10 +99,12 @@ function GroupChatModal({ users, onClose, isOpen }: Props) {
               <Select
                 disabled={isLoading}
                 label="Members"
-                options={users.map((user) => ({
-                  value: user.id,
-                  label: user.name,
-                }))}
+                options={users
+                  .filter((user) => user.id !== currentUser?.userId)
+                  .map((user) => ({
+                    value: user.id,
+                    label: user.name,
+                  }))}
                 onChange={(value) =>
                   setValue("members", value, {
                     shouldValidate: true,
