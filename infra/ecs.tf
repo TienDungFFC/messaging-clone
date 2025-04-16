@@ -371,7 +371,7 @@ resource "aws_lb_target_group" "chat_service" {
 # Auto-scaling configuration for the chat service
 resource "aws_appautoscaling_target" "chat_service_target" {
   max_capacity       = 10
-  min_capacity       = 1
+  min_capacity       = 2
   resource_id        = "service/${aws_ecs_cluster.chat_cluster.name}/${aws_ecs_service.chat_service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"

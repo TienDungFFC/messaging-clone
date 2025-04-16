@@ -56,6 +56,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       auth: {
         userId: user.id,
       },
+      withCredentials: true,
+      transports: ["websocket", "polling"] 
     });
 
     // Set up event listeners

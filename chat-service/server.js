@@ -45,6 +45,7 @@ const io = new Server(server, {
   cors: {
     origin: '*', // In production, restrict this to allowed origins
     methods: ['GET', 'POST'],
+    credentials: true
   },
 });
 
