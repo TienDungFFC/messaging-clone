@@ -133,27 +133,30 @@ export const createOrFindConversation = async (
  * @param conversationId The ID of the conversation to mark as seen
  * FEATURE TEMPORARILY DISABLED
  */
-/*
+
+
 export const markConversationAsSeen = async (conversationId: string) => {
   try {
     const response = await api.post(`/api/conversations/${conversationId}/seen`);
-    return response.data;
+    return response.data; 
   } catch (error: any) {
     console.error('Error marking conversation as seen:', error);
+    
     return { 
       success: false, 
       message: error.response?.data?.message || 'Error marking conversation as seen' 
     };
   }
 };
-*/
+
+
 
 // Export the service with all functions grouped
 const conversationService = {
   getConversations,
   getConversationById,
   createOrFindConversation,
-  // markConversationAsSeen - temporarily disabled
+  markConversationAsSeen
 };
 
 export default conversationService;

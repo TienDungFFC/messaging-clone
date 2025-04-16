@@ -8,6 +8,7 @@ import { useSocket } from "@/context/SocketContext";
 import { Message, Conversation } from "@/types";
 import { getCurrentUser } from "@/utils/auth";
 import useOtherUser from "@/hooks/useOtherUser";
+import conversationService from "@/services/conversationService";
 interface BodyProps {
   initialMessages: Message[];
   conversation: Conversation;
@@ -33,7 +34,6 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
       userId: string;
       name: string;
     }) => {
-      console.log("user typing:", userId);
       if (cid !== conversationId) return;
 
       setTypingUsers((prev) => ({
@@ -66,16 +66,56 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
     }
   }, [conversationId, joinConversation, socket]);
 
-  // Mark messages as seen when conversation is opened
+  // Scroll to bottom when entering conversation or receiving new messages
   useEffect(() => {
-    if (!conversationId) return;
-
-    axios.post(`/api/conversations/${conversationId}/seen`).catch((error) => {
-      console.error("Error marking conversation as seen:", error);
+    bottomRef?.current?.scrollIntoView({
+      behavior: "smooth",
     });
-  }, [conversationId]);
+  }, [messages]);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (bottomRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = bottomRef.current;
+        if (scrollHeight - scrollTop <= clientHeight) {
+          const lastMessage = messages[messages.length - 1];
+          const currentTime = new Date().toISOString();
+          const lastMessageTime = lastMessage.createdAt;
+          // Nếu thời gian hiện tại lớn hơn thời gian tin nhắn cuối, gọi API để đánh dấu "seen"
+          markConversationAsSeen(conversationId);
+          // if (new Date(currentTime) > new Date(lastMessageTime)) {
+          //   markConversationAsSeen(conversationId);
+          // }
+        }
+      }
+    };
 
-  // Listen for new messages from socket
+    bottomRef.current?.addEventListener("scroll", handleScroll);
+    return () => {
+      bottomRef.current?.removeEventListener("scroll", handleScroll);
+    };
+  }, [messages, conversationId]);
+
+  const markConversationAsSeen = async (conversationId: string) => {
+    try {
+      const response = await conversationService.markConversationAsSeen(
+        conversationId
+      );
+      if (response.success) {
+        console.log("Conversation marked as seen");
+        setMessages((prevMessages) =>
+          prevMessages.map((message) =>
+            message.conversationId === conversationId
+              ? { ...message, isSeen: "true" }
+              : message
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error marking conversation as seen", error);
+    }
+  };
+
+  // Lắng nghe tin nhắn mới
   useEffect(() => {
     if (!socket || !conversationId) return;
 
@@ -92,20 +132,15 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
     };
   }, [socket, conversationId]);
 
-  // Scroll to bottom when entering conversation or receiving new messages
-  useEffect(() => {
-    bottomRef?.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  }, [messages]);
-
   return (
-    <div className="flex-1 overflow-y-auto dark:bg-black">
+    <div className="flex-1 overflow-y-auto dark:bg-black" ref={bottomRef}>
       {messages.map((message, index) => (
         <MessageBox
           isLast={index === messages.length - 1}
           key={message.messageId}
           data={message}
+          isSeen={message.isSeen}
+          otherUser={otherUser?.name}
         />
       ))}
       <div className="pt-24" ref={bottomRef} />

@@ -27,18 +27,20 @@ interface MessageBoxProps {
   data: Message;
   isLast?: boolean;
   isTyping?: boolean;
+  isSeen: boolean;
+  otherUser?: string;
 }
 
 const MessageBox: React.FC<MessageBoxProps> = ({
   data,
   isLast,
   isTyping = false,
+  isSeen,
+  otherUser,
 }) => {
   const currentUser = getCurrentUser();
   const [imageModalOpen, setImageModalOpen] = useState(false);
-
   const isOwn = currentUser?.id === data.senderId;
-
   // Format seen list if available
   // const seenList = (data.seen || [])
   //   .filter((user) => user.id !== data.senderId)
@@ -109,11 +111,11 @@ const MessageBox: React.FC<MessageBoxProps> = ({
             <div className="max-w-[350px]">{data.content}</div>
           )}
         </div>
-        {/* {isLast && isOwn && seenList.length > 0 && (
+        {isOwn && isSeen && isLast && (
           <div className="text-xs font-light text-gray-500 dark:text-gray-400">
-            {`Seen by ${seenList}`}
+            {`Seen by ${otherUser}`}
           </div>
-        )} */}
+        )}
       </div>
     </motion.div>
   );

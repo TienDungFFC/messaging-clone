@@ -71,7 +71,7 @@ export const sendMessage = async (
  * Mark a conversation as seen by the current user
  * FEATURE TEMPORARILY DISABLED
  */
-/*
+
 export const markConversationAsSeen = async (conversationId: string) => {
   try {
     const response = await api.post(`/api/conversations/${conversationId}/seen`);
@@ -84,13 +84,13 @@ export const markConversationAsSeen = async (conversationId: string) => {
     };
   }
 };
-*/
+
 
 // Export the service with all functions grouped
 const messageService = {
   getMessages,
   sendMessage,
-  // markConversationAsSeen - temporarily disabled
+  markConversationAsSeen
 };
 
 export default messageService;
