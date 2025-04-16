@@ -58,7 +58,7 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
       if (socket) {
         socket.emit("stop:typing", {
           conversationId,
-          userId: currentUser?.userId,
+          userId: currentUser?.id,
         });
       }
 

@@ -6,7 +6,7 @@ const useOtherUser = (conversation: Conversation | { participantIds: string[], t
   const session = useSession();
   
   const otherUser = useMemo(() => {
-    const currentUserUserId = session.user?.userId;
+    const currentUserUserId = session.user?.id;
     
     // Handle the case when there's no current user (not logged in)
     if (!currentUserUserId) {
@@ -47,7 +47,7 @@ const useOtherUser = (conversation: Conversation | { participantIds: string[], t
       name: 'User ' + otherParticipantId.substring(0, 5),
       email: '',
     };
-  }, [session.user?.userId, conversation]);
+  }, [session.user?.id, conversation]);
 
   return otherUser;
 };

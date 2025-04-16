@@ -1,11 +1,12 @@
 export interface User {
-  userId: string;
+  id: string;
   name: string;
-  email: string;
+  email?: string;
   avatarUrl?: string;
   status?: string;
   lastSeen?: string;
   createdAt?: string;
+  isActive?: boolean;
 }
 
 export interface Conversation {
@@ -16,9 +17,10 @@ export interface Conversation {
   lastMessageAt?: string;
   lastMessagePreview?: string;
   otherUser?: {
-    userId: string;
+    id: string;
     name: string;
     avatarUrl?: string;
+    isActive?: boolean;
   };
   createdAt?: string;
   updatedAt?: string;

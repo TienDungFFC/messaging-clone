@@ -24,7 +24,7 @@ export const getAllUsers = async (): Promise<{
     if (response.data.success) {
       // Transform user data to match the frontend User type
       const transformedUsers = response.data.users.map((user: any) => ({
-        id: user.userId,
+        id: user.id,
         name: user.name,
         email: user.email,
         avatarUrl: user.avatarUrl || null,
@@ -108,7 +108,7 @@ export const searchUsers = async (query: string): Promise<{
     if (response.data.success) {
       // Transform users to match frontend User type
       const transformedUsers = response.data.users.map((user: any) => ({
-        id: user.userId,
+        id: user.id,
         name: user.name,
         email: user.email,
         avatarUrl: user.avatarUrl || null,

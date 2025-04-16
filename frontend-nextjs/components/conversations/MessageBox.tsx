@@ -40,10 +40,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
   const isOwn = currentUser?.userId === data.senderId;
 
   // Format seen list if available
-  const seenList = (data.seen || [])
-    .filter((user) => user.userId !== data.senderId)
-    .map((user) => user.name)
-    .join(", ");
+  // const seenList = (data.seen || [])
+  //   .filter((user) => user.id !== data.senderId)
+  //   .map((user) => user.name)
+  //   .join(", ");
 
   const container = clsx(`flex gap-3 p-4`, isOwn && "justify-end");
   const avatar = clsx(isOwn && "order-2");
@@ -109,11 +109,11 @@ const MessageBox: React.FC<MessageBoxProps> = ({
             <div className="max-w-[350px]">{data.content}</div>
           )}
         </div>
-        {isLast && isOwn && seenList.length > 0 && (
+        {/* {isLast && isOwn && seenList.length > 0 && (
           <div className="text-xs font-light text-gray-500 dark:text-gray-400">
             {`Seen by ${seenList}`}
           </div>
-        )}
+        )} */}
       </div>
     </motion.div>
   );

@@ -9,7 +9,7 @@ import { api } from "@/utils/axiosConfig";
 
 // Define the User interface
 export interface User {
-  userId: string;
+  id: string;
   name: string;
   email: string;
   avatarUrl?: string;
@@ -26,6 +26,8 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  loading: boolean; 
+  error: string | null;
 }
 
 // Create the auth context
@@ -38,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   // Initialize auth state from cookies/localStorage
@@ -210,7 +213,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login,
       register,
       logout,
-      refreshUser
+      refreshUser,
+      loading: isLoading,  // Có thể dùng lại isLoading hoặc tạo state mới
+      error            // Thêm error
     }}>
       {children}
     </AuthContext.Provider>

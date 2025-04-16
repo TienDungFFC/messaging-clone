@@ -34,7 +34,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
     return items.filter((conversation) =>
       conversation.participantIds.includes(session.user?.userId ?? "")
     );
-  }, [items, session?.user?.userId]);
+  }, [items, session?.user?.id]);
 
   return (
     <>

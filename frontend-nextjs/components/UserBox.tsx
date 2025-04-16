@@ -28,7 +28,7 @@ const UserBox: React.FC<UserBoxProps> = ({ data }) => {
       const currentUser = getCurrentUser();
       
       // Check if we're trying to message ourselves
-      if (data.id === currentUser?.userId) {
+      if (data.id === currentUser?.id) {
         alert("You cannot start a conversation with yourself");
         setIsLoading(false);
         return;

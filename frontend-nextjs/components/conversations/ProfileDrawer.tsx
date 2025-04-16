@@ -8,23 +8,12 @@ import { format } from "date-fns";
 import Avatar from "../Avatar";
 import AvatarGroup from "../AvatarGroup";
 import ConfirmModal from "../model/ConfirmModal";
+import { Conversation } from "@/types";
 
 interface User {
   userId: string;
   name: string;
   avatarUrl: string;
-}
-
-interface Conversation {
-  conversationId: string;
-  name: string;
-  participantIds: string[];
-  type: 'direct' | 'group';
-  lastMessagePreview: string;
-  createdAt: string;
-  updatedAt: string;
-  lastMessageAt: string;
-  otherUser?: User;
 }
 
 interface ProfileDrawerProps {
@@ -54,7 +43,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
   }, [data.participantIds.length, isGroup]);
 
   const joinedDate = useMemo(() => {
-    return format(new Date(data.createdAt), 'PP');
+    return format(new Date(data.createdAt || new Date()), 'PP');
   }, [data.createdAt]);
 
   return (
@@ -120,7 +109,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
                             {isGroup ? (
                               <AvatarGroup users={[]} name={data.name} size="large" />
                             ) : (
-                              <Avatar user={data.otherUser || { name: title }} size="large" />
+                              <Avatar user={data.otherUser || { name: title }} />
                             )}
                           </div>
                           <div className="text-xl font-bold">{title}</div>

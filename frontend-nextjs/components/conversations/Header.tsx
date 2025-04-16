@@ -6,25 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { HiChevronLeft } from "react-icons/hi";
 import { HiEllipsisHorizontal } from "react-icons/hi2";
-
-interface User {
-  userId: string;
-  name: string;
-  avatarUrl: string;
-  isActive?: boolean;
-}
-
-interface Conversation {
-  conversationId: string;
-  name: string;
-  participantIds: string[];
-  type: 'direct' | 'group';
-  lastMessagePreview: string;
-  createdAt: string;
-  updatedAt: string;
-  lastMessageAt: string;
-  otherUser?: User;
-}
+import { Conversation, User } from "@/types";
 
 interface HeaderProps {
   conversation: Conversation;
@@ -84,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
   
   const isGroup = conversation.type === 'group';
   const otherUser = conversation.otherUser || {
-    userId: '',
+    id: '',
     name: 'Unknown User',
     avatarUrl: '',
     isActive: false

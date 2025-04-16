@@ -10,6 +10,7 @@ import Button from "../Button";
 import Input from "../input/Input";
 import Select from "../input/Select";
 import Modal from "./Modal";
+import { User } from "@/types";
 
 type Props = {
   isOpen?: boolean;
