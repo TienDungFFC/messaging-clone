@@ -87,7 +87,7 @@ function ConversationBox({ data, selected }: Props) {
         <div className="focus:outline-none">
           <div className="flex justify-between items-center mb-1">
             <p className="text-md text-gray-900 dark:text-gray-100 font-medium truncate">
-              {data.name || otherUser.name}
+              {data.name || otherUser?.name}
             </p>
             {lastMessage?.createdAt && (
               <p className="text-xs text-gray-400 font-light dark:text-gray-300 pl-2">

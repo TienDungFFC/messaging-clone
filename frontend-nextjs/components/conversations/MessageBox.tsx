@@ -20,20 +20,25 @@ interface Message {
   status: string;
   conversationId: string;
   messageType: string;
-  seen?: Array<{userId: string, name: string}>;
+  seen?: Array<{ userId: string; name: string }>;
 }
 
 interface MessageBoxProps {
   data: Message;
   isLast?: boolean;
+  isTyping?: boolean;
 }
 
-const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
+const MessageBox: React.FC<MessageBoxProps> = ({
+  data,
+  isLast,
+  isTyping = false,
+}) => {
   const currentUser = getCurrentUser();
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  
+
   const isOwn = currentUser?.userId === data.senderId;
-  
+
   // Format seen list if available
   const seenList = (data.seen || [])
     .filter((user) => user.userId !== data.senderId)
@@ -45,7 +50,11 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
   const body = clsx(`flex flex-col gap-2`, isOwn && "items-end");
   const message = clsx(
     "text-sm w-fit overflow-hidden",
-    isOwn ? "bg-sky-500 text-white" : "bg-gray-100 dark:bg-gray-900",
+    isTyping
+      ? "bg-transparent text-gray-400 italic"
+      : isOwn
+      ? "bg-sky-500 text-white"
+      : "bg-gray-100 dark:bg-gray-900",
     data.messageType === "image" ? "rounded-md p-0" : "rounded-2xl py-2 px-3"
   );
 
@@ -61,11 +70,11 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
       className={container}
     >
       <div className={avatar}>
-        <Avatar 
+        <Avatar
           user={{
-            image: data.senderAvatar || '/assets/placeholder.jpg',
-            name: data.senderName
-          }} 
+            image: data.senderAvatar || "/assets/placeholder.jpg",
+            name: data.senderName,
+          }}
         />
       </div>
       <div className={body}>
@@ -78,7 +87,9 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
           </div>
         </div>
         <div className={message}>
-          {data.messageType === "image" ? (
+          {isTyping ? (
+            <div className="max-w-[350px]">Đang nhập...</div>
+          ) : data.messageType === "image" ? (
             <>
               <ImageModal
                 src={data.content}
@@ -106,6 +117,6 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
       </div>
     </motion.div>
   );
-}
+};
 
 export default MessageBox;

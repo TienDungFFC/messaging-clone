@@ -34,7 +34,7 @@ export interface Message {
   status: string;
   conversationId: string;
   messageType: string;
-  createdAt?: string;
+  createdAt: string;
   updatedAt?: string;
 }
 

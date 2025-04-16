@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { HiPhoto, HiPaperAirplane } from "react-icons/hi2";
 import { CldUploadButton } from "next-cloudinary";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
@@ -16,26 +16,45 @@ interface FormProps {
 const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
   const { socket, isConnected, sendMessage } = useSocket();
   const currentUser = useSession().user;
-  
+
   const {
     register,
     handleSubmit,
     setValue,
-    formState: {
-      errors,
-    }
+    formState: { errors },
   } = useForm<FieldValues>({
     defaultValues: {
-      message: ""
-    }
+      message: "",
+    },
   });
-  
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const TYPING_TIMEOUT = 3000;
+  const startTyping = () => {
+    if (!socket || !isConnected || !currentUser) return;
+
+    socket.emit("typing", {
+      conversationId,
+      userId: currentUser.userId,
+    });
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stop:typing", {
+        conversationId,
+        userId: currentUser.userId,
+      });
+    }, TYPING_TIMEOUT);
+  };
+
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     if (!conversationId || !data.message.trim()) return;
 
     try {
       setValue("message", "", { shouldValidate: true });
-      
+
       if (socket) {
         socket.emit("stop:typing", {
           conversationId,
@@ -43,12 +62,12 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
         });
       }
 
-      const senderId = currentUser?.userId || '';
+      const senderId = currentUser?.userId || "";
       const content = data.message;
-      
+
       if (isConnected) {
-        sendMessage(conversationId, content, senderId, 'text');
-        
+        sendMessage(conversationId, content, senderId, "text");
+
         if (onMessageSent) {
           onMessageSent();
         }
@@ -58,38 +77,32 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
     }
   };
 
-  const handleUpload = useCallback(async (result: any) => {
-    try {
-      const imageUrl = result?.info?.secure_url;
-      
-      if (imageUrl && conversationId) {
-        // Lấy thông tin người gửi
-        const senderId = currentUser?.userId || '';
-        
-        // Gửi tin nhắn hình ảnh qua WebSocket
-        if (isConnected) {
-          // Gửi tin nhắn với cấu trúc đúng và loại tin nhắn là 'image'
-          sendMessage(conversationId, imageUrl, senderId, 'image');
-          
-          // Thông báo cho component cha
-          if (onMessageSent) {
-            onMessageSent();
+  const handleUpload = useCallback(
+    async (result: any) => {
+      try {
+        const imageUrl = result?.info?.secure_url;
+
+        if (imageUrl && conversationId) {
+          // Lấy thông tin người gửi
+          const senderId = currentUser?.userId || "";
+
+          // Gửi tin nhắn hình ảnh qua WebSocket
+          if (isConnected) {
+            // Gửi tin nhắn với cấu trúc đúng và loại tin nhắn là 'image'
+            sendMessage(conversationId, imageUrl, senderId, "image");
+
+            // Thông báo cho component cha
+            if (onMessageSent) {
+              onMessageSent();
+            }
           }
         }
+      } catch (error) {
+        console.error("Error uploading image:", error);
       }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    }
-  }, [conversationId, onMessageSent, isConnected, sendMessage, currentUser]);
-
-  const handleTyping = () => {
-    if (socket && isConnected && currentUser) {
-      socket.emit("typing", {
-        conversationId,
-        userId: currentUser.userId
-      });
-    }
-  };
+    },
+    [conversationId, onMessageSent, isConnected, sendMessage, currentUser]
+  );
 
   return (
     <div className="py-4 px-4 bg-white dark:bg-black border-t dark:border-t-gray-600 flex items-center gap-2 lg:gap-4 w-full">
@@ -110,7 +123,7 @@ const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
           errors={errors}
           required
           placeholder="Write a message"
-          onChange={handleTyping}
+          onChange={startTyping}
         />
         <button
           type="submit"

@@ -9,15 +9,17 @@ type Props = {
   required?: boolean;
   register: UseFormRegister<FieldValues>;
   errors: FieldErrors;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 function MessageInput({
   placeholder,
   id,
-  type,
+  type = "text",
   required,
   register,
   errors,
+  onChange,
 }: Props) {
   return (
     <div className="relative w-full">
@@ -25,9 +27,14 @@ function MessageInput({
         id={id}
         type={type}
         autoComplete={id}
-        {...register(id, { required })}
         placeholder={placeholder}
         className="text-black dark:text-white font-light py-2 px-4 bg-neutral-100 dark:bg-neutral-900 w-full rounded-full focus:outline-none"
+        {...register(id, {
+          required,
+          onChange: (e) => {
+            onChange?.(e);
+          },
+        })}
       />
     </div>
   );
