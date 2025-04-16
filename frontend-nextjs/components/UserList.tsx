@@ -16,7 +16,7 @@ function UserList() {
       try {
         setLoading(true);
         const result = await getAllUsers();
-        
+
         if (result.success && result.users) {
           setUsers(result.users);
         } else {
@@ -41,7 +41,7 @@ function UserList() {
             People
           </div>
         </div>
-        
+
         {loading ? (
           <div className="flex justify-center items-center h-40">
             <LoadingSpinner />
@@ -53,9 +53,7 @@ function UserList() {
             No users found
           </div>
         ) : (
-          users.map((user) => (
-            <UserBox key={user.id} data={user} />
-          ))
+          users.map((user) => <UserBox key={user.id} data={user} />)
         )}
       </div>
     </aside>

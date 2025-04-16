@@ -23,7 +23,6 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
   const { joinConversation, socket } = useSocket();
   const [typingUsers, setTypingUsers] = useState<Record<string, number>>({});
   const currentUser = getCurrentUser();
-  console.log("currentUser: ", currentUser);
   useEffect(() => {
     if (!socket || !conversationId) return;
 
@@ -101,7 +100,6 @@ const Body: React.FC<BodyProps> = ({ initialMessages, conversation }) => {
       behavior: "smooth",
     });
   }, [messages]);
-  console.log("typingUsers map:", typingUsers);
 
   return (
     <div className="flex-1 overflow-y-auto dark:bg-black">

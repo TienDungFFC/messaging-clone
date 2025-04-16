@@ -16,7 +16,6 @@ interface FormProps {
 const Form: React.FC<FormProps> = ({ conversationId, onMessageSent }) => {
   const { socket, isConnected, sendMessage } = useSocket();
   const currentUser = useSession().user;
-  console.log("currentUser: ", currentUser);
   const {
     register,
     handleSubmit,
