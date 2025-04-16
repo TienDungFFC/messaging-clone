@@ -109,7 +109,7 @@ const Body: React.FC<BodyProps> = ({ initialMessages }) => {
       ))}
       <div className="pt-24" ref={bottomRef} />
       {Object.entries(typingUsers)
-        .filter(([userId]) => userId !== currentUser?.userId)
+        .filter(([userId]) => userId !== currentUser?.id)
         .map(([userId]) => {
           const fakeMessage: Message = {
             messageId: `typing-${userId}`,

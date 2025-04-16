@@ -29,10 +29,10 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const session = useSession();
 
   const conversations = useMemo(() => {
-    if (!session?.user?.userId) return items;
+    if (!session?.user?.id) return items;
 
     return items.filter((conversation) =>
-      conversation.participantIds.includes(session.user?.userId ?? "")
+      conversation.participantIds.includes(session.user?.id ?? "")
     );
   }, [items, session?.user?.id]);
 
